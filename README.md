@@ -13,3 +13,6 @@ The United States has been reliant on natural gas as their main source of energy
 
 ## Dataset Source: 
 https://www.eia.gov/naturalgas/data.php
+
+## Use of API Documentation
+https://www.eia.gov/opendata/documentation.php
