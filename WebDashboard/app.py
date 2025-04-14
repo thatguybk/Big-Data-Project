@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 st.set_page_config(page_title="Natural Gas Environmental Impact", layout="wide")
 
@@ -91,6 +92,23 @@ with st.expander("View Raw Data"):
 
 ##st.write("Price Data Columns:", price_df.columns.tolist())
 ##st.write("Quantity Data Columns:", quantity_df.columns.tolist())
+
+
+merged_df = pd.merge(temp_df, price_df, left_on="Date", right_on="Month")
+
+# Optional: Drop one of the date columns to clean up
+merged_df = merged_df.drop(columns=["Month"])
+merged_df = merged_df.rename(columns={"Date": "Month"})
+
+# Compute correlation matrix
+correlation = merged_df.select_dtypes(include=["float64", "int64"]).corr()
+
+# Plot the correlation heatmap
+st.subheader("Correlation Between Temperature and Natural Gas Price")
+fig, ax = plt.subplots()
+sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
+st.pyplot(fig)
+
 
 # Merge on common column (e.g., Date or Month)
 # Adjust column names as necessary
