@@ -47,6 +47,9 @@ quantity_df = quantity_df[quantity_df["Date"].dt.year > 1989]
 gas_price_df = price_df.sort_values("Date")
 quantity_df = quantity_df.sort_values("Date")
 
+#gas_price_df = gas_price_df[gas_price_df["Date"].dt.year > 1999]
+#temp_df = temp_df[temp_df["Date"].dt.year > 1999]
+
 st.markdown("There are many Factors that affect the price of natural gas imports, including: weather, temperature, natural desasters and other events that disrupt supply chains. We will explore these factors in the following sections.")
 
 
@@ -90,6 +93,10 @@ with st.expander("View Raw Data"):
     st.subheader("Quantity Data")
     st.write(quantity_df)
 
+
+gas_price_df = gas_price_df[gas_price_df["Date"].dt.year > 1999]
+temp_df = temp_df[temp_df["Date"].dt.year > 1999]
+
 ##st.write("Price Data Columns:", price_df.columns.tolist())
 ##st.write("Quantity Data Columns:", quantity_df.columns.tolist())
 truncated_price_df = price_df
@@ -103,7 +110,7 @@ correlation = merged_df_1.select_dtypes(include=["float64", "int64"]).corr()
 
 # Plot the correlation heatmap
 st.subheader("Correlation Between Temperature and Natural Gas Price")
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(3,2))
 sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
 st.pyplot(fig)
 
@@ -111,9 +118,9 @@ st.pyplot(fig)
 
 # --- Add Season Column ---
 def get_season(month):
-    if month in [12, 1, 2]:
+    if month in [12, 1, 2, 3]:
         return "Winter"
-    elif month in [3, 4, 5]:
+    elif month in [4, 5]:
         return "Spring"
     elif month in [6, 7, 8]:
         return "Summer"
@@ -130,7 +137,7 @@ print("Seasonal correlations between temperature and gas price:")
 print(season_correlations)
 
 # --- Optional: Visualize as bar chart ---
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(3,2))
 sns.barplot(data=season_correlations, x="Season", y="Gas Price", palette="coolwarm", ax=ax)
 ax.set_title("Correlation Between Temperature and Gas Price by Season")
 ax.set_ylabel("Correlation Coefficient")
@@ -140,6 +147,14 @@ ax.axhline(0, color='gray', linestyle='--')
 # Display in Streamlit
 st.pyplot(fig)
 
+
+st.markdown("The correlation between temperature and natural gas price is significant, with a correlation coefficient of {:.3f}. This indicates that as temperature decreases, the price of natural gas increases. The data also shows a seasonal pattern, with higher prices in the winter months when demand for natural gas is highest.".format(correlation.loc['Value', 'Gas Price']))
+
+st.markdown("The correlation coefficient for each season is as follows:")
+for season, corr in zip(season_correlations['Season'], season_correlations['Gas Price']):
+    st.markdown(f"- **{season}:** {corr:.3f}")
+
+st.markdown("The correlation is skewed due to other factors, such as natural disasters and supply chain disruptions, affecting the price of natural gas. (Mention year truncation due to little fluctuations from start of data to 1998)")
 
 
 
