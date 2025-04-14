@@ -9,13 +9,15 @@ st.set_page_config(page_title="Natural Gas Environmental Impact", layout="wide")
 # Load data
 
 price_df = pd.read_csv("data/Natural_Gas_Import_Price.csv", skiprows=2, parse_dates=["Date"])
+price_df["Date"] = pd.to_datetime(price_df["Date"])
 quantity_df = pd.read_csv("data/Natural_Gas_Import_Quantity.csv", skiprows=2, parse_dates=["Date"])
+quantity_df["Date"] = pd.to_datetime(quantity_df["Date"])
 # Load CSV, skipping the first 2 rows
 
 temp_df = pd.read_csv("data/TempData.csv", skiprows=3)
 df = temp_df.rename(columns={"Value": "Temperature (f)"})
 temp_df["Date"] = temp_df["Date"].astype(str)  # Convert to string
-temp_df["Date"] = pd.to_datetime(temp_df["Date"], format="%Y%m")
+temp_df["Date"] = pd.to_datetime(temp_df["Date"], format="%Y%m")  # Convert to datetime
 temp_df = temp_df[temp_df["Date"].dt.year > 1989]
 #temp_df["Date"] = temp_df.sort_values("Date").reset_index(drop=True)
 print(temp_df.head())
@@ -37,15 +39,13 @@ st.markdown("This dashboard provides insights into the environmental impact of n
 st.markdown("Our goal is to explore the economic implications of natural gas imports and solar power generation in the US. We will analyze the trends in natural gas prices and quantities imported, as well as the growth of solar energy generation over time. This analysis will help us understand the potential benefits of transitioning to renewable energy sources. We will also explore at what point (year) it would make the most sense to impliment Solar Power in the form of Photovoltaic cells, to match the energy consumed.")
 
 
-price_df["Date"] = pd.to_datetime(price_df["Date"])
-quantity_df["Date"] = pd.to_datetime(quantity_df["Date"])
 
 # Filter to only include data after 1985
 ###price_df = price_df[price_df["Date"].dt.year > 2015]
 quantity_df = quantity_df[quantity_df["Date"].dt.year > 1989]
 
 gas_price_df = price_df.sort_values("Date")
-
+quantity_df = quantity_df.sort_values("Date")
 
 st.markdown("There are many Factors that affect the price of natural gas imports, including: weather, temperature, natural desasters and other events that disrupt supply chains. We will explore these factors in the following sections.")
 
@@ -92,16 +92,14 @@ with st.expander("View Raw Data"):
 
 ##st.write("Price Data Columns:", price_df.columns.tolist())
 ##st.write("Quantity Data Columns:", quantity_df.columns.tolist())
+truncated_price_df = price_df
+truncated_price_df["Date"] = pd.to_datetime(price_df["Date"]).dt.to_period("M").dt.to_timestamp()
+merged_df_1 = pd.merge(temp_df, truncated_price_df, on="Date", how="inner")
+merged_df_1.rename(columns={"Price of U.S. Natural Gas Imports (Dollars per Thousand Cubic Feet)": "Gas Price"}, inplace=True)
+#print(truncated_price_df.head())
 
-
-merged_df = pd.merge(temp_df, price_df, left_on="Date", right_on="Month")
-
-# Optional: Drop one of the date columns to clean up
-merged_df = merged_df.drop(columns=["Month"])
-merged_df = merged_df.rename(columns={"Date": "Month"})
-
-# Compute correlation matrix
-correlation = merged_df.select_dtypes(include=["float64", "int64"]).corr()
+# Calculate correlation matrix (for numeric columns only)
+correlation = merged_df_1.select_dtypes(include=["float64", "int64"]).corr()
 
 # Plot the correlation heatmap
 st.subheader("Correlation Between Temperature and Natural Gas Price")
@@ -110,12 +108,45 @@ sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
 st.pyplot(fig)
 
 
+
+# --- Add Season Column ---
+def get_season(month):
+    if month in [12, 1, 2]:
+        return "Winter"
+    elif month in [3, 4, 5]:
+        return "Spring"
+    elif month in [6, 7, 8]:
+        return "Summer"
+    else:
+        return "Autumn"
+
+merged_df_1["Season"] = merged_df_1["Date"].dt.month.apply(get_season)
+
+# --- Calculate correlations for each season ---
+season_correlations = merged_df_1.groupby("Season")[["Value", "Gas Price"]].corr().iloc[0::2, -1].reset_index()
+
+# Display season correlations
+print("Seasonal correlations between temperature and gas price:")
+print(season_correlations)
+
+# --- Optional: Visualize as bar chart ---
+fig, ax = plt.subplots()
+sns.barplot(data=season_correlations, x="Season", y="Gas Price", palette="coolwarm", ax=ax)
+ax.set_title("Correlation Between Temperature and Gas Price by Season")
+ax.set_ylabel("Correlation Coefficient")
+ax.set_ylim(-1, 1)
+ax.axhline(0, color='gray', linestyle='--')
+
+# Display in Streamlit
+st.pyplot(fig)
+
+
+
+
 # Merge on common column (e.g., Date or Month)
 # Adjust column names as necessary
 merged_df = pd.merge(price_df, quantity_df, on="Date")
-
-# Multiply to get total cost
-merged_df["Total Import Cost"] = merged_df["Price of U.S. Natural Gas Imports (Dollars per Thousand Cubic Feet)"] * merged_df["U.S. Natural Gas Imports (MMcf)"]
+print(merged_df.head())
 
 # Multiply to calculate total cost
 merged_df["Total Import Cost"] = merged_df["Price of U.S. Natural Gas Imports (Dollars per Thousand Cubic Feet)"] * merged_df["U.S. Natural Gas Imports (MMcf)"]
