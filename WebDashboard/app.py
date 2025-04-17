@@ -163,23 +163,60 @@ print(merged_df.head())
 # Multiply to calculate total cost
 merged_df["Total Import Cost"] = merged_df["Price of U.S. Natural Gas Imports (Dollars per Thousand Cubic Feet)"] * (merged_df["U.S. Natural Gas Imports (MMcf)"]* 1000)
 
-
 # Sort the data if needed (e.g., by Date)
 merged_df = merged_df.sort_values("Date")
 
+#Quantity of Natural Gas Imported over the years
+fig = px.line(
+    merged_df,
+    x="Date",
+    y="U.S. Natural Gas Imports (MMcf)",
+    title="U.S. Natural Gas Imports Over the Years",
+    labels={"U.S. Natural Gas Imports (MMcf)": "Natural Gas Imported (MMcf)"}
+)
+
+fig.update_layout(
+    title={
+        'text': "U.S. Natural Gas Imports (1989 - 2024)",
+        'y':0.9,  # position title
+        'x':0.155, 
+        'xanchor': 'center',
+        'font': dict(size=25)  # font size
+    }
+)
+
+# Display the chart in Streamlit
+st.plotly_chart(fig)
+st.markdown("The quantity of natural gas imported into the US has fluctuated over the years, with notable peaks and troughs. The data shows a steady increase in the quantity of natural gas imported until 2008, reflecting the growing demand for natural gas in the US. After 2008 the US increased its domestic production of natural gas. The data also shows seasonal variations, with higher imports in the winter months and lower imports in the summer months. This trend is consistent with the seasonal demand for natural gas.")
 
 
+st.markdown("INSERT NATURAL GAS PRODUCTION IN THE US VISUALIZATION HERE")
 
 
-# Streamlit Bar Chart
-##st.subheader("Total Natural Gas Import Cost (Bar Chart)")
-##st.bar_chart(data=merged_df, x="Date", y="Total Import Cost")
+#Total cost to import over the years
+fig = px.line(
+    merged_df,
+    x="Date",
+    y="Total Import Cost",
+    title="Total Natural Gas Import Cost (1989 - 2024)",
+    labels={"Total Import Cost": "Total Import Cost (USD)"}
+)
 
-# Optional: Streamlit Line Chart
-st.subheader("Total Natural Gas Import Cost (1989 - 2024)")
-st.line_chart(data=merged_df, x="Date", y="Total Import Cost")
+fig.update_layout(
+    title={
+        'text': "Total Natural Gas Import Cost (1989 - 2024)",
+        'y':0.9,  # position title 
+        'x':0.175,  
+        'xanchor': 'center',
+        'font': dict(size=25)  # font size
+    }
+)
 
-st.markdown("By multiplying the price of natural gas by the quantity imported, we can see the total cost to import natural gas. The price of natural gas is listed in the dataset as per thousand cubic feet ($/Mfc), and the quantity dataset displays the values int the unit of million cubic feet (MMcf). To normalize these values, we multiply the quantity by 1000 then multiply the result by the cost to get the total cost incurred by the US for importing natural gas.")
+
+# Display in Streamlit
+st.plotly_chart(fig)
+
+st.markdown("By multiplying the price of natural gas by the quantity imported, we can see the total cost to import natural gas. The price of natural gas is listed in the dataset as per thousand cubic feet ($/Mcf), and the quantity dataset displays the values int the unit of million cubic feet (MMcf). To normalize these values, we multiply the quantity by 1000 then multiply the result by the cost to get the total cost incurred by the US for importing natural gas.")
 
 
 st.subheader("Solar Energy Generation Data (2001 - 2024)")
