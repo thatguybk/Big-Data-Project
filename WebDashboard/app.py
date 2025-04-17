@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
+import altair as alt
 
 st.set_page_config(page_title="Natural Gas Environmental Impact", layout="wide")
 
@@ -14,14 +15,21 @@ price_df["Date"] = pd.to_datetime(price_df["Date"])
 
 quantity_df = pd.read_csv("data/Natural_Gas_Import_Quantity.csv", skiprows=2, parse_dates=["Date"])
 quantity_df["Date"] = pd.to_datetime(quantity_df["Date"])
-# Load CSV, skipping the first 2 rows
+
+
+quantityProduced_df = pd.read_csv("data/Natural_Gas_Plant_Processing.csv", skiprows=6, sep=None, engine="python")
+quantityProduced_df["Month"] = pd.to_datetime(quantityProduced_df["Month"], errors="coerce")
+quantityProduced_df = quantityProduced_df.sort_values("Month", ascending=False).reset_index(drop=True)
+quantityProduced_df = quantityProduced_df[quantityProduced_df["Month"].dt.year > 1989]
+print(quantityProduced_df.head())
+print(quantityProduced_df.dtypes)
+
 
 temp_df = pd.read_csv("data/TempData.csv", skiprows=3)
 #df = temp_df.rename(columns={"Value": "Temperature (f)"})
 temp_df["Date"] = temp_df["Date"].astype(str)  # Convert to string
 temp_df["Date"] = pd.to_datetime(temp_df["Date"], format="%Y%m")  # Convert to datetime
 temp_df = temp_df[temp_df["Date"].dt.year > 1989]
-#temp_df["Date"] = temp_df.sort_values("Date").reset_index(drop=True)
 #print(temp_df.head())
 
 solar_df = pd.read_csv("data/Solar_Energy_Generation.csv", skiprows=4)
@@ -156,9 +164,7 @@ st.markdown("The correlation is skewed due to other factors, such as natural dis
 quantity_df["Date"] = pd.to_datetime(quantity_df["Date"]).dt.to_period("M").dt.to_timestamp()
 
 merged_df = pd.merge(price_df, quantity_df, on="Date", how="inner")
-print(price_df.head())
-print(quantity_df.head())
-print(merged_df.head())
+
 
 # Multiply to calculate total cost
 merged_df["Total Import Cost"] = merged_df["Price of U.S. Natural Gas Imports (Dollars per Thousand Cubic Feet)"] * (merged_df["U.S. Natural Gas Imports (MMcf)"]* 1000)
@@ -190,7 +196,23 @@ st.plotly_chart(fig)
 st.markdown("The quantity of natural gas imported into the US has fluctuated over the years, with notable peaks and troughs. The data shows a steady increase in the quantity of natural gas imported until 2008, reflecting the growing demand for natural gas in the US. After 2008 the US increased its domestic production of natural gas. The data also shows seasonal variations, with higher imports in the winter months and lower imports in the summer months. This trend is consistent with the seasonal demand for natural gas.")
 
 
+
+
+
 st.markdown("INSERT NATURAL GAS PRODUCTION IN THE US VISUALIZATION HERE")
+
+
+#quantityProduced_df = quantityProduced_df.sort_values("Month")
+
+fig = px.line(quantityProduced_df, x="Month", y="U.S. Natural Gas Plant Liquids Production MMcf")
+fig.update_layout(yaxis_title="Natural Gas Produced (Million Cublic Feat MMcf)", xaxis_title="Date")
+# Display in Streamlit
+st.plotly_chart(fig)
+
+# Area Chart
+st.subheader("Natural Gas Quantity Processed Over Time (Area Chart)")
+st.area_chart(quantityProduced_df, x="Month", y="U.S. Natural Gas Plant Liquids Production MMcf")
+
 
 
 #Total cost to import over the years
