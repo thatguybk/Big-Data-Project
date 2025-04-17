@@ -47,6 +47,10 @@ quantity_df = quantity_df[quantity_df["Date"].dt.year > 1989]
 gas_price_df = price_df.sort_values("Date")
 quantity_df = quantity_df.sort_values("Date")
 
+gas_price_df = gas_price_df[gas_price_df["Date"].dt.year > 1998]
+temp_df = temp_df[temp_df["Date"].dt.year > 1998]
+
+
 #gas_price_df = gas_price_df[gas_price_df["Date"].dt.year > 1999]
 #temp_df = temp_df[temp_df["Date"].dt.year > 1999]
 
@@ -55,7 +59,7 @@ st.markdown("There are many Factors that affect the price of natural gas imports
 
 
 # Create bar chart
-st.subheader("Natural Gas Import Price (1989 - 2024)")
+st.subheader("Natural Gas Import Price (1998 - 2024)")
 #st.markdown("Here we can see the trends of the price to import Natural gas into the US from 1998 to 2004.")
 
 fig = px.bar(
@@ -75,7 +79,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.markdown("The price of natural gas has fluctuated over the years, with notable peaks and troughs. This data is crucial for understanding the economic implications of natural gas imports and the potential benefits of transitioning to renewable energy sources. In September 2005, according to the U.S. Energy Information Administration (EIA), the price of natural gas imports was 6.00 per thousand cubic feet (Mcf). This was a significant increase from the previous year, when the price was around 4.00 per Mcf. The increase in price was attributed to several factors, including increased demand for natural gas due to Hurricane Katrina and other weather-related events that disrupted supply chains.")
 
-st.subheader("Temperature (1990 - 2024)")
+st.subheader("Temperature (1998 - 2025)")
 st.markdown("This chart illustrates the temperature trend in the US from 1990 to 2024. The data shows a correlation between temperature and the price of natural gas imports.")
 fig = px.line(temp_df, x="Date", y="Value")
 fig.update_layout(yaxis_title="Temperature (f)", xaxis_title="Date")
@@ -94,8 +98,7 @@ with st.expander("View Raw Data"):
     st.write(quantity_df)
 
 
-gas_price_df = gas_price_df[gas_price_df["Date"].dt.year > 1999]
-temp_df = temp_df[temp_df["Date"].dt.year > 1999]
+
 
 ##st.write("Price Data Columns:", price_df.columns.tolist())
 ##st.write("Quantity Data Columns:", quantity_df.columns.tolist())
@@ -110,7 +113,7 @@ correlation = merged_df_1.select_dtypes(include=["float64", "int64"]).corr()
 
 # Plot the correlation heatmap
 st.subheader("Correlation Between Temperature and Natural Gas Price")
-fig, ax = plt.subplots(figsize=(3,2))
+fig, ax = plt.subplots(figsize=(4,2))
 sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
 st.pyplot(fig)
 
@@ -154,7 +157,7 @@ st.markdown("The correlation coefficient for each season is as follows:")
 for season, corr in zip(season_correlations['Season'], season_correlations['Gas Price']):
     st.markdown(f"- **{season}:** {corr:.3f}")
 
-st.markdown("The correlation is skewed due to other factors, such as natural disasters and supply chain disruptions, affecting the price of natural gas. (Mention year truncation due to little fluctuations from start of data to 1998)")
+st.markdown("The correlation is skewed due to other factors, such as natural disasters and supply chain disruptions, affecting the price of natural gas.")
 
 
 
