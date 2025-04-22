@@ -111,7 +111,7 @@ correlation = merged_df_1.select_dtypes(include=["float64", "int64"]).corr()
 # Plot the correlation heatmap
 st.subheader("Correlation Between Temperature and Natural Gas Price")
 fig, ax = plt.subplots(figsize=(4,2))
-sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
+sns.heatmap(correlation, annot=True, cmap="crest", fmt=".2f", ax=ax)
 st.pyplot(fig)
 
 
@@ -138,7 +138,7 @@ print(season_correlations)
 
 # Visualize as bar chart
 fig, ax = plt.subplots(figsize=(3,2))
-sns.barplot(data=season_correlations, x="Season", y="Gas Price", palette="coolwarm", ax=ax)
+sns.barplot(data=season_correlations, x="Season", y="Gas Price", palette="inferno", ax=ax)
 ax.set_title("Correlation Between Temperature and Gas Price by Season")
 ax.set_ylabel("Correlation Coefficient")
 ax.set_ylim(-1, 1)
@@ -173,6 +173,8 @@ merged_df["Total Import Cost"] = merged_df["Price of U.S. Natural Gas Imports (D
 merged_df = merged_df.sort_values("Date")
 
 #Quantity of Natural Gas Imported over the years
+
+st.subheader("U.S. Natural Gas Imports (1989 - 2024)")
 fig = px.line(
     merged_df,
     x="Date",
@@ -181,58 +183,50 @@ fig = px.line(
     labels={"U.S. Natural Gas Imports (MMcf)": "Natural Gas Imported (MMcf)"}
 )
 
-fig.update_layout(
-    title={
-        'text': "U.S. Natural Gas Imports (1989 - 2024)",
-        'y':0.9,  # position title
-        'x':0.155, 
-        'xanchor': 'center',
-        'font': dict(size=25)  # font size
-    }
-)
-
 # Display the chart in Streamlit
 st.plotly_chart(fig)
 st.markdown("The quantity of natural gas imported into the US has fluctuated over the years, with notable peaks and troughs. The data shows a steady increase in the quantity of natural gas imported until 2008, reflecting the growing demand for natural gas in the US. After 2008 the US increased its domestic production of natural gas. The data also shows seasonal variations, with higher imports in the winter months and lower imports in the summer months. This trend is consistent with the seasonal demand for natural gas.")
 
 
-
-
-
-st.markdown("INSERT NATURAL GAS PRODUCTION IN THE US VISUALIZATION HERE")
-
-
-#quantityProduced_df = quantityProduced_df.sort_values("Month")
-
+st.subheader("Natural Gas Production Data (1990 - 2024)")
 fig = px.line(quantityProduced_df, x="Month", y="U.S. Natural Gas Plant Liquids Production MMcf")
 fig.update_layout(yaxis_title="Natural Gas Produced (Million Cublic Feat MMcf)", xaxis_title="Date")
 # Display in Streamlit
 st.plotly_chart(fig)
 
-# Area Chart
-st.subheader("Natural Gas Quantity Processed Over Time (Area Chart)")
-st.area_chart(quantityProduced_df, x="Month", y="U.S. Natural Gas Plant Liquids Production MMcf")
 
+#correlation between imports and production
+quantityProduced_df.rename(columns={"Month": "Date"}, inplace=True)
+merged_df_2 = pd.merge(quantity_df, quantityProduced_df, on="Date", how="inner")
+
+merged_df_renamed = merged_df_2.rename(columns={
+    "U.S. Natural Gas Imports (MMcf)": "Imports (MMcf)",
+    "U.S. Natural Gas Plant Liquids Production MMcf": "Produced (MMcf)"
+})
+
+#Only numic columns to be correlated
+correlation_data = merged_df_renamed.select_dtypes(include='number')
+# Compute correlation matrix
+correlation_matrix = correlation_data.corr()
+
+# Plot using seaborn
+st.subheader("Correlation Matrix: Natural Gas Imports vs Production")
+fig, ax = plt.subplots(figsize=(4, 2))
+sns.heatmap(correlation_matrix, annot=True, cmap="crest", ax=ax)
+st.pyplot(fig)
+st.markdown(f"The above graphs show a negative correlation of {correlation_matrix.iloc[0, 1]:.2f}. This indicates that as the quantity of natural gas imports decreases, the quantity of natural gas produced increases. This trend is consistent with the growing domestic production of natural gas in the US, which has led to a decrease in imports.")
 
 
 #Total cost to import over the years
+st.subheader("Total Natural Gas Import Cost (1989 - 2024)")
 fig = px.line(
     merged_df,
     x="Date",
     y="Total Import Cost",
-    title="Total Natural Gas Import Cost (1989 - 2024)",
+    #title="Total Natural Gas Import Cost (1989 - 2024)",
     labels={"Total Import Cost": "Total Import Cost (USD)"}
 )
 
-fig.update_layout(
-    title={
-        'text': "Total Natural Gas Import Cost (1989 - 2024)",
-        'y':0.9,  # position title 
-        'x':0.175,  
-        'xanchor': 'center',
-        'font': dict(size=25)  # font size
-    }
-)
 
 
 # Display in Streamlit
@@ -248,6 +242,5 @@ st.write(solar_df.head())
 st.subheader("Solar Energy Generation Over Time")
 st.markdown("This chart illustrates the solar energy generation in the US from 2001 to 2024. The data shows a steady increase in solar energy generation, reflecting the growing adoption of renewable energy sources.")
 st.line_chart(data=solar_df, x="Month", y=solar_df.columns[1])
-
 
 
