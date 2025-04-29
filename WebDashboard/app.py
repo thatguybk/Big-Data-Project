@@ -43,6 +43,21 @@ solar_df =solar_df[solar_df["Month"].dt.year < 2025]
 # Preview the result
 #print(solar_df.tail())
 
+
+for df in [temp_df, price_df, quantity_df, quantityProduced_df]:
+    if "Date" in df.columns:
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+    elif "Month" in df.columns:
+        df["Month"] = pd.to_datetime(df["Month"], errors="coerce")
+        df.rename(columns={"Month": "Date"}, inplace=True)
+
+
+for df in [temp_df, price_df, quantity_df, quantityProduced_df]:
+    df.dropna(subset=["Date"], inplace=True)
+    
+
+
+
 st.title(" Renewable Energy Feasiblity Dashboard (USA)")
 st.markdown("This dashboard provides insights into the environmental impact of natural gas imports in the United States and the associated economic strain of implementing Solar power generation.") 
 st.markdown("Our goal is to explore the economic implications of natural gas imports and solar power generation in the US. We will analyze the trends in natural gas prices and quantities imported, as well as the growth of solar energy generation over time. This analysis will help us understand the potential benefits of transitioning to renewable energy sources. We will also explore at what point (year) it would make the most sense to impliment Solar Power in the form of Photovoltaic cells, to match the energy consumed.")
@@ -189,7 +204,7 @@ st.markdown("The quantity of natural gas imported into the US has fluctuated ove
 
 
 st.subheader("Natural Gas Production Data (1990 - 2024)")
-fig = px.line(quantityProduced_df, x="Month", y="U.S. Natural Gas Plant Liquids Production MMcf")
+fig = px.line(quantityProduced_df, x="Date", y="U.S. Natural Gas Plant Liquids Production MMcf")
 fig.update_layout(yaxis_title="Natural Gas Produced (Million Cublic Feat MMcf)", xaxis_title="Date")
 # Display in Streamlit
 st.plotly_chart(fig)
@@ -235,6 +250,125 @@ st.plotly_chart(fig)
 st.markdown("By multiplying the price of natural gas by the quantity imported, we can see the total cost to import natural gas. The price of natural gas is listed in the dataset as per thousand cubic feet ($/Mcf), and the quantity dataset displays the values int the unit of million cubic feet (MMcf). To normalize these values, we multiply the quantity by 1000 then multiply the result by the cost to get the total cost incurred by the US for importing natural gas.")
 
 
+
+
+
+
+merged_df4 = temp_df.merge(price_df, on="Date", how="inner")
+merged_df4 = merged_df4.merge(quantity_df, on="Date", how="inner")
+merged_df4 = merged_df4.merge(quantityProduced_df, on="Date", how="inner")
+
+
+
+merged_df4["Year"] = merged_df4["Date"].dt.year
+merged_df4["Month"] = merged_df4["Date"].dt.strftime('%B')
+merged_df4["Season"] = merged_df4["Date"].dt.month % 12 // 3 + 1  # 1: Winter, 2: Spring, 3: Summer, 4: Fall
+season_map = {1: "Winter", 2: "Spring", 3: "Summer", 4: "Fall"}
+merged_df4["Season"] = merged_df4["Season"].map(season_map)
+
+
+
+merged_df4["Total Import Cost"] = merged_df4["Price of U.S. Natural Gas Imports (Dollars per Thousand Cubic Feet)"] * (merged_df4["U.S. Natural Gas Imports (MMcf)"]* 1000)
+
+#BOX PLOTS
+
+# Create Month Name and Number for ordering
+merged_df4["Month Name"] = merged_df4["Date"].dt.strftime('%B')
+merged_df4["Month Number"] = merged_df4["Date"].dt.month
+
+# Sort for correct month order
+merged_df4 = merged_df4.sort_values("Month Number")
+
+# Define order explicitly
+month_order = pd.date_range("2000-01-01", periods=12, freq="M").strftime("%B")
+
+# Create boxplots
+fig, axes = plt.subplots(2, 1, figsize=(12, 16), sharex=False)
+
+# 1. Imports
+sns.boxplot(
+    data=merged_df4,
+    x="Month Name",
+    y="U.S. Natural Gas Imports (MMcf)",
+    order=month_order,
+    ax=axes[0],
+    palette="coolwarm",
+    width=0.5
+)
+axes[0].set_title("Seasonal Distribution of Natural Gas Imports")
+
+#====SPLIT INTO TWO PAGES NOT TWO PLOTS ON THE SAME PAGE=====
+
+# 3. Prices
+sns.boxplot(
+    data=merged_df4,
+    x="Month Name",
+    y="Price of U.S. Natural Gas Imports (Dollars per Thousand Cubic Feet)",
+    order=month_order,
+    ax=axes[1],
+    palette="OrRd",
+    width=0.5
+)
+axes[1].set_title("Seasonal Distribution of Natural Gas Import Prices")
+axes[1].set_xlabel("Month")
+
+plt.xticks(ticks=range(0, 12), labels=[
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+], fontsize=10)
+
+# Rotate x-axis labels for clarity
+
+
+for ax in axes:
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+    ax.set_xlabel("-------------------------------------------------------------------------------------------------------------------------------------------- Month --------------------------------------------------------------------------------------------------------------------------------------------")
+    ax.grid(axis='y', linestyle='--', alpha=0.5)
+
+# Display the plot
+plt.tight_layout(pad=2.5)
+st.pyplot(fig)
+
+#KEY HIGHLIGHTS
+
+# 1. Highest Monthly Import
+max_import_row = merged_df4.loc[merged_df4["U.S. Natural Gas Imports (MMcf)"].idxmax()]
+max_import_value = max_import_row["U.S. Natural Gas Imports (MMcf)"]
+max_import_date = max_import_row["Date"].strftime("%b %Y")
+
+# 2. Year with Highest Production
+yearly_production = merged_df4.groupby("Year")["U.S. Natural Gas Plant Liquids Production MMcf"].sum()
+highest_production_year = yearly_production.idxmax()
+highest_production_value = yearly_production.max()
+
+# 3. Month with Highest Cost
+max_cost_row = merged_df4.loc[merged_df4["Total Import Cost"].idxmax()]
+max_cost_value = max_cost_row["Total Import Cost"]
+max_cost_date = max_cost_row["Date"].strftime("%b %Y")
+
+# 4. Average Temperature per Season
+avg_temp_season = merged_df4.groupby("Season")["Value"].mean().round(2)
+
+
+
+# Display metrics
+st.subheader("📊 Key Highlights")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric(label="📈 Highest Monthly Import", value=f"{max_import_value:,.0f} MMcf", delta=max_import_date)
+
+with col2:
+    st.metric(label="🏭 Highest Production Year", value=f"{highest_production_year}", delta=f"{highest_production_value:,.0f} units")
+
+with col3:
+    st.metric(label="💰 Highest Monthly Import Cost", value=f"${max_cost_value:,.0f}", delta=max_cost_date)
+
+
+
+
+
 st.subheader("Solar Energy Generation Data (2001 - 2024)")
 st.write(solar_df.head())
 
@@ -243,4 +377,19 @@ st.subheader("Solar Energy Generation Over Time")
 st.markdown("This chart illustrates the solar energy generation in the US from 2001 to 2024. The data shows a steady increase in solar energy generation, reflecting the growing adoption of renewable energy sources.")
 st.line_chart(data=solar_df, x="Month", y=solar_df.columns[1])
 
+
+
+
+
+
+
+
+
+
+
+merged_df_3 = pd.merge(price_df, quantity_df, on="Date", how="inner")
+
+merged_df_3 = pd.merge(quantityProduced_df,merged_df, on="Date", how="inner")
+
+merged_df_3.head()
 
