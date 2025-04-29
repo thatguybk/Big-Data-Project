@@ -126,7 +126,7 @@ correlation = merged_df_1.select_dtypes(include=["float64", "int64"]).corr()
 # Plot the correlation heatmap
 st.subheader("Correlation Between Temperature and Natural Gas Price")
 fig, ax = plt.subplots(figsize=(4,2))
-sns.heatmap(correlation, annot=True, cmap="crest", fmt=".2f", ax=ax)
+sns.heatmap(correlation, annot=True, cmap="RdGy" , fmt=".2f", ax=ax)
 st.pyplot(fig)
 
 
@@ -153,7 +153,7 @@ print(season_correlations)
 
 # Visualize as bar chart
 fig, ax = plt.subplots(figsize=(3,2))
-sns.barplot(data=season_correlations, x="Season", y="Gas Price", palette="inferno", ax=ax)
+sns.barplot(data=season_correlations, x="Season", y="Gas Price", palette="Accent", ax=ax)
 ax.set_title("Correlation Between Temperature and Gas Price by Season")
 ax.set_ylabel("Correlation Coefficient")
 ax.set_ylim(-1, 1)
@@ -292,7 +292,7 @@ sns.boxplot(
     y="U.S. Natural Gas Imports (MMcf)",
     order=month_order,
     ax=axes[0],
-    palette="coolwarm",
+    palette="crest",
     width=0.5
 )
 axes[0].set_title("Seasonal Distribution of Natural Gas Imports")
@@ -306,7 +306,7 @@ sns.boxplot(
     y="Price of U.S. Natural Gas Imports (Dollars per Thousand Cubic Feet)",
     order=month_order,
     ax=axes[1],
-    palette="OrRd",
+    palette="BuPu",
     width=0.5
 )
 axes[1].set_title("Seasonal Distribution of Natural Gas Import Prices")
