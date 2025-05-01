@@ -6,7 +6,6 @@ import seaborn as sns
 import altair as alt
 
 st.set_page_config(page_title="Natural Gas Environmental Impact", layout="wide")
-
 # LOAD AND PRE CLEAN DATA
 
 price_df = pd.read_csv("data/Natural_Gas_Import_Price.csv", skiprows=2, parse_dates=["Date"])
@@ -34,6 +33,12 @@ quantityProduced_df = quantityProduced_df.sort_values("Date", ascending=False).r
 quantityProduced_df = quantityProduced_df[quantityProduced_df["Date"].dt.year > 1989]
 quantityProduced_df = quantityProduced_df.dropna(subset=["Date", "Production (MMcf)"])
 
+
+
+ngConsumption_df = pd.read_csv("data/Natural_Gas_Deleiveries_to_Electric_Power_Consumers.csv", skiprows=2)
+ngConsumption_df = ngConsumption_df.rename(columns={ "U.S. Natural Gas Deliveries to Electric Power Consumers (MMcf)": "Consumption (MMcf)"})
+ngConsumption_df["Date"] = pd.to_datetime(ngConsumption_df["Date"]).dt.to_period("M").dt.to_timestamp()
+ngConsumption_df = ngConsumption_df.dropna(subset=["Date", "Consumption (MMcf)"])
 
 
 temp_df = pd.read_csv("data/TempData.csv", skiprows=3)
@@ -67,10 +72,11 @@ allmerged_df = temp_df.merge(price_df, on="Date", how="outer")
 allmerged_df = allmerged_df.merge(imports_df, on="Date", how="outer")
 allmerged_df = allmerged_df.merge(quantityProduced_df, on="Date", how="outer")
 allmerged_df = allmerged_df.merge(solar_df, on="Date", how="outer")
+allmerged_df = allmerged_df.merge(ngConsumption_df, on="Date", how="outer")
 # Sort and reset index
 allmerged_df = allmerged_df.sort_values("Date").reset_index(drop=True)
 # Drop rows with no useful data
-main_cols = ["Temperature (F)", "Price ($/MCF)", "Imports (MMcf)", "Production (MMcf)", "Solar Generation (1000 MWh)"]
+main_cols = ["Temperature (F)", "Price ($/MCF)", "Imports (MMcf)", "Production (MMcf)", "Solar Generation (1000 MWh)", "Consumption (MMcf)"]
 allmerged_df = allmerged_df.dropna(subset=main_cols, how="all")
 
 allmerged_df.to_csv("cleaned_merged_dataset.csv", index=False)
@@ -348,3 +354,30 @@ with col3:
 
 
 
+
+
+
+
+
+
+
+
+#STACKED BAR GRAPH OF CONSUMPTION VS PRODUCTION
+
+bar_df = allmerged_df[["Date", "Consumption (MMcf)", "Production (MMcf)", "Imports (MMcf)"]].copy()  
+
+
+fig, ax = plt.subplots(figsize=(12, 6))
+ax.bar(bar_df.index, bar_df["Production (MMcf)"], label="Production", color="skyblue")
+ax.bar(bar_df.index, bar_df["Consumption (MMcf)"], bottom=bar_df["Production (MMcf)"], label="Consumption", color="orange")
+ax.bar(bar_df.index, bar_df["Imports (MMcf)"], bottom=bar_df["Production (MMcf)"], label="Imports", color="red")
+
+ax.set_title("Natural Gas Consumption vs Production", fontsize=18)
+ax.set_xlabel("Month", fontsize=12)
+ax.set_ylabel("Volume (MMcf)", fontsize=12)
+ax.legend()
+ax.grid(axis='y', linestyle='--', alpha=0.7)
+plt.xticks(rotation=45)
+
+# Show in Streamlit
+st.pyplot(fig)
