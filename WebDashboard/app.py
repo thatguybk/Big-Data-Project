@@ -51,10 +51,8 @@ temp_df = temp_df.dropna(subset=["Date", "Temperature (F)"])
 
 
 solar_df = pd.read_csv("data/Solar_Energy_Generation.csv", skiprows=4)
-print(solar_df.columns)
 #Standarzing column names
 solar_df = solar_df.rename(columns={"Month": "Date", "all utility-scale solar thousand megawatthours": "Solar Generation (1000 MWh)"})
-print(solar_df.columns)
 solar_df.columns = ["Date", "Solar Generation (1000 MWh)"]
 # Convert 'Month' column to datetime
 solar_df["Date"] = pd.to_datetime(solar_df["Date"])
@@ -66,6 +64,12 @@ solar_df["Date"] = pd.to_datetime(solar_df["Date"]).dt.to_period("M").dt.to_time
 #Drop NAN values
 solar_df = solar_df.dropna(subset=["Date", "Solar Generation (1000 MWh)"])
 
+
+irradiance_df = pd.read_csv("data/consolidated_solar_irradiance.csv")
+irradiance_df = irradiance_df.drop(columns=["Source_File"])
+irradiance_df['Date'] = pd.to_datetime(irradiance_df['Date'])
+
+
 #MERGE 
 
 allmerged_df = temp_df.merge(price_df, on="Date", how="outer")
@@ -73,6 +77,7 @@ allmerged_df = allmerged_df.merge(imports_df, on="Date", how="outer")
 allmerged_df = allmerged_df.merge(quantityProduced_df, on="Date", how="outer")
 allmerged_df = allmerged_df.merge(solar_df, on="Date", how="outer")
 allmerged_df = allmerged_df.merge(ngConsumption_df, on="Date", how="outer")
+allmerged_df = allmerged_df.merge(irradiance_df, on="Date", how="outer")
 # Sort and reset index
 allmerged_df = allmerged_df.sort_values("Date").reset_index(drop=True)
 # Drop rows with no useful data
