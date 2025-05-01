@@ -369,20 +369,28 @@ with col3:
 
 #STACKED BAR GRAPH OF CONSUMPTION VS PRODUCTION
 
-bar_df = allmerged_df[["Date", "Consumption (MMcf)", "Production (MMcf)", "Imports (MMcf)"]].copy()  
+#bar_df = allmerged_df[["Date", "Consumption (MMcf)", "Production (MMcf)", "Imports (MMcf)"]].copy()  
 
 
-fig, ax = plt.subplots(figsize=(12, 6))
-ax.bar(bar_df.index, bar_df["Production (MMcf)"], label="Production", color="skyblue")
-ax.bar(bar_df.index, bar_df["Consumption (MMcf)"], bottom=bar_df["Production (MMcf)"], label="Consumption", color="orange")
-ax.bar(bar_df.index, bar_df["Imports (MMcf)"], bottom=bar_df["Production (MMcf)"], label="Imports", color="red")
+#fig, ax = plt.subplots(figsize=(12, 6))
+#ax.bar(bar_df.index, bar_df["Production (MMcf)"], label="Production", color="skyblue")
+#ax.bar(bar_df.index, bar_df["Consumption (MMcf)"], bottom=bar_df["Production (MMcf)"], label="Consumption", color="orange")
+#ax.bar(bar_df.index, bar_df["Imports (MMcf)"], bottom=bar_df["Production (MMcf)"], label="Imports", color="red")
 
-ax.set_title("Natural Gas Consumption vs Production", fontsize=18)
-ax.set_xlabel("Month", fontsize=12)
-ax.set_ylabel("Volume (MMcf)", fontsize=12)
-ax.legend()
-ax.grid(axis='y', linestyle='--', alpha=0.7)
-plt.xticks(rotation=45)
+#ax.set_title("Natural Gas Consumption vs Production", fontsize=18)
+#ax.set_xlabel("Month", fontsize=12)
+#ax.set_ylabel("Volume (MMcf)", fontsize=12)
+#ax.legend()
+#ax.grid(axis='y', linestyle='--', alpha=0.7)
+#plt.xticks(rotation=45)
 
 # Show in Streamlit
-st.pyplot(fig)
+#st.pyplot(fig)
+
+
+
+#
+irradiance = allmerged_df[["Date", "GHI", "Clearsky GHI"]].copy()
+
+st.subheader('GHI vs GHI assuming Clear Skies (1998-2023)')
+st.line_chart(irradiance.set_index('Date'))
