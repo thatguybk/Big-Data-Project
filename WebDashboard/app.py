@@ -412,7 +412,7 @@ st.line_chart(irradiance.set_index('Date'))
 
 
 generation = allmerged_df[["Date", "Natural Gas Generation (1000 MWh)", "Solar Generation (1000 MWh)"]].copy()
-st.subheader('Natural Gas Generation vs Solar Generation (2001-2025)')
+st.subheader('Natural Gas Generation vs Solar Generation (1000 MW) (2001-2025)')
 st.line_chart(generation.set_index('Date'))
 
 
