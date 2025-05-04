@@ -161,7 +161,7 @@ print(corr_df.head())
 correlation = corr_df[["Price ($/MCF)", "Temperature (F)"]].corr()
 
 # Plot the correlation heatmap
-st.subheader("Correlation Between Temperature and Natural Gas Price")
+st.subheader("Correlation Between Temperature and Natural Gas Import Price")
 fig, ax = plt.subplots(figsize=(4,2))
 sns.heatmap(correlation, annot=True, cmap="RdGy" , fmt=".2f", ax=ax)
 st.pyplot(fig)
