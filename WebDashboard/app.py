@@ -76,7 +76,7 @@ ng_power_generation = ng_power_generation.rename(columns={"Month": "Date", "natu
 ng_power_generation = ng_power_generation.dropna(subset=["Date", "Natural Gas Generation (1000 MWh)"])
 ng_power_generation["Date"] = pd.to_datetime(ng_power_generation["Date"]).dt.to_period("M").dt.to_timestamp()
 
-#avg cost to generate electricity
+#avg cost to generate electricity from NG
 ng_avg_cost = pd.read_csv("data/avg_cost_to_generate_electricity.csv", skiprows=4)
 ng_avg_cost = ng_avg_cost.rename(columns={"Month": "Date", "United States : natural gas dollars per mcf" : "Natural Gas Avg Cost ($/MWh)"})
 ng_avg_cost = ng_avg_cost.dropna(subset=["Date", "Natural Gas Avg Cost ($/MWh)"])
