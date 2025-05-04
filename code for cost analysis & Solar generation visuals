@@ -1,0 +1,91 @@
+
+#-------------------------------------------------------------------------#------------------
+
+# Time-Series Plots: Visualize trends over time (Solar Generation, Solar PV Prices).
+plt.figure(figsize=(12,6))
+sns.lineplot(data=df, x='Year', y='Solar_Generation')
+plt.title('Solar Generation Over Time')
+plt.xlabel('Year')
+plt.ylabel('Solar Generation (MW)')
+plt.grid(True)
+plt.show()
+
+#Boxplots: Visualize distribution and variability.
+sns.boxplot(data=df, x='Year', y='Solar_PV_Price')
+plt.title('Solar PV Price Distribution')
+plt.xlabel('Year')
+plt.ylabel('Solar PV Price ($)')
+plt.grid(True)
+plt.show()
+
+#Scatterplots with Regression Lines: Understand the relationship between cost and solar generation.
+sns.lmplot(data=df, x='Solar_PV_Price', y='Solar_Generation', aspect=2)
+plt.title('Relationship between Solar PV Price and Solar Generation')
+plt.xlabel('Solar PV Price ($)')
+plt.ylabel('Solar Generation (MW)')
+plt.grid(True)
+plt.show()
+
+## Solar Generation Analysis
+#As shown in the graph above, solar generation has significantly increased from [year start] to [year end]. Key influencing factors include declining costs of photovoltaic modules and governmental incentives. The downward trend in solar PV module prices directly correlates with increased adoption and generation capacity.
+
+
+#Cost Analysis
+
+#Calculate Levelized Cost of Energy (LCOE):
+# Example simplified formula
+def calculate_lcoe(investment, operational_costs, total_energy_generated):
+    lcoe = (investment + operational_costs) / total_energy_generated
+    return lcoe
+
+solar_lcoe = calculate_lcoe(solar_investment, solar_operational_cost, solar_energy_generated)
+gas_lcoe = calculate_lcoe(gas_investment, gas_operational_cost, gas_energy_generated)
+
+#Visualize comparative LCOE:
+lcoe_df = pd.DataFrame({
+    'Energy Source': ['Solar', 'Natural Gas'],
+    'LCOE ($/MWh)': [solar_lcoe, gas_lcoe]
+})
+
+sns.barplot(x='Energy Source', y='LCOE ($/MWh)', data=lcoe_df)
+plt.title('LCOE Comparison: Solar vs. Natural Gas')
+plt.grid(True)
+plt.show()
+
+#Dashboard Implementation (Dash)
+import dash
+from dash import dcc, html
+import plotly.express as px
+import pandas as pd
+
+app = dash.Dash(__name__)
+df = pd.read_csv('cleaned_merged_dataset.csv')
+
+fig = px.line(df, x='Year', y='Solar_Generation', title='Solar Generation Over Time')
+
+app.layout = html.Div([
+    html.H1("Solar Energy Analysis Dashboard"),
+    dcc.Graph(id='solar-gen', figure=fig)
+])
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
+
+
+# Project Enhancement Recommendations:
+# Add Predictive Modeling:
+
+    #   Implement predictive models (e.g., ARIMA, Prophet) to forecast future solar generation and economic impacts.
+
+# Comparative Regional Analysis:
+
+    #   Extend the analysis beyond the US, comparing international adoption rates and impacts.
+
+# Environmental Impact Metrics:
+
+    #   Include metrics such as carbon footprint reductions and other environmental impacts.
+
+# Interactive Cost Analysis Tool:
+
+    #   Develop an interactive tool allowing users to adjust variables (cost, efficiency, subsidies) and see impacts in real-time.
+
