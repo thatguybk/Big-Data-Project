@@ -110,6 +110,104 @@ print(allmerged_df.dtypes)
 
 
 
+# Load and process natural-gas-prices.csv
+ng_energy_generation_prices_df = pd.read_csv("data/natural-gas-prices.csv")
+ng_energy_generation_prices_df = ng_energy_generation_prices_df[['Year', 'Gas price']].rename(columns={'Gas price': 'Price ($/MWh)'})
+
+# Display info
+# with st.expander("Natural Gas Prices DataFrame:"):
+#     st.subheader("Head")
+#     st.write(ng_energy_generation_prices_df.head())
+#     st.subheader("Tail")
+#     st.write(ng_energy_generation_prices_df.tail())
+
+# Load and process levelized-cost-of-energy.csv
+lcoe_df = pd.read_csv("data/levelized-cost-of-energy.csv")
+lcoe_df = lcoe_df[['Year', 'Solar photovoltaic levelized cost of energy']]
+lcoe_df = lcoe_df.rename(columns={'Solar photovoltaic levelized cost of energy': 'Solar LCOE ($/KWh)'})
+lcoe_df = lcoe_df.dropna(subset=['Solar LCOE ($/KWh)'])
+
+# Display info
+# with st.expander("Levelized Cost of Energy DataFrame:"):
+#     st.subheader("Head")
+#     st.write(lcoe_df.head())
+#     st.subheader("Tail")
+#     st.write(lcoe_df.tail())
+
+# Sum monthly values for ng_power_generation
+ng_power_yearly = ng_power_generation.copy()
+ng_power_yearly['Year'] = ng_power_yearly['Date'].dt.year
+ng_power_yearly = ng_power_yearly.groupby('Year', as_index=False)['Natural Gas Generation (1000 MWh)'].sum()
+
+# Display info
+# with st.expander("Yearly Natural Gas Generation DataFrame:"):
+#     st.subheader("Head")
+#     st.write(ng_power_yearly.head())
+#     st.subheader("Tail")
+#     st.write(ng_power_yearly.tail())
+
+# Merge gas prices with yearly energy generation
+merged_gas = pd.merge(ng_energy_generation_prices_df, ng_power_yearly, on='Year', how='inner')
+
+# Display info
+# with st.expander("Merged Gas Prices & Generation DataFrame:"):
+#     st.subheader("Head")
+#     st.write(merged_gas.head())
+#     st.subheader("Tail")
+#     st.write(merged_gas.tail())
+
+# Merge LCOE with yearly energy generation
+merged_lcoe = pd.merge(lcoe_df, ng_power_yearly, on='Year', how='inner')
+
+# Display info
+# with st.expander("Merged LCOE & Generation DataFrame:"):
+#     st.subheader("Head")
+#     st.write(merged_lcoe.head())
+#     st.subheader("Tail")
+#     st.write(merged_lcoe.tail())
+    
+# Calculate Natural Gas Cost (in USD)
+merged_gas['Natural Gas Cost ($ USD)'] = (
+    merged_gas['Natural Gas Generation (1000 MWh)'] * 1000 *  # Convert to MWh (1 thousand MWh = 1,000 MWh)
+    merged_gas['Price ($/MWh)']
+)
+
+# Calculate Solar Cost (in USD)
+merged_lcoe['Solar Cost ($ USD)'] = (
+    merged_lcoe['Natural Gas Generation (1000 MWh)'] * 1000 * 1000 *  # Convert to kWh (1 thousand MWh = 1,000,000 kWh)
+    merged_lcoe['Solar LCOE ($/KWh)']
+)
+
+# Create comparison dataframe
+comparison_df = pd.merge(
+    merged_gas[['Year', 'Natural Gas Cost ($ USD)']],
+    merged_lcoe[['Year', 'Solar Cost ($ USD)']],
+    on='Year',
+    how='inner'
+)
+
+# # Add energy generation column for reference
+# comparison_df = pd.merge(
+#     comparison_df,
+#     ng_power_yearly[['Year', 'Natural Gas Generation (1000 MWh)']],
+#     on='Year',
+#     how='left'
+# )
+
+# # Rename for clarity
+# comparison_df = comparison_df.rename(columns={
+#     'Natural Gas Generation (1000 MWh)': 'Energy Generated (1000 MWh)'
+# })
+
+# Display info
+# with st.expander("Total cost of natural and solar:"):
+#     st.subheader("Head")
+#     st.write(comparison_df.head())
+#     st.subheader("Tail")
+#     st.write(comparison_df.tail())
+    
+# st.subheader('Energy Generation Prices using Natural Gas vs Using Solar')
+# st.line_chart(comparison_df.set_index('Year'))
 
 
 
