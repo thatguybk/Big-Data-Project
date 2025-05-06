@@ -205,9 +205,6 @@ comparison_df = pd.merge(
 #     st.write(comparison_df.head())
 #     st.subheader("Tail")
 #     st.write(comparison_df.tail())
-    
-# st.subheader('Energy Generation Prices using Natural Gas vs Using Solar')
-# st.line_chart(comparison_df.set_index('Year'))
 
 
 
@@ -595,3 +592,55 @@ fig = px.line(
 
 # Display in Streamlit
 st.plotly_chart(fig)
+
+
+#-----------------------------------------------------ADAM GRAPHS---------------------------------------
+solar_pv_module_df = pd.read_csv("data/solar-pv-prices.csv")
+solar_pv_module_df = solar_pv_module_df[['Year', 'Solar photovoltaic module price']]
+solar_pv_module_df = solar_pv_module_df.rename(columns={'Solar photovoltaic module price': 'Solar PV Module Price($)'})
+
+# st.subheader("Solar PV Price Distribution Over Years")
+# fig, ax = plt.subplots(figsize=(10, 6))
+# sns.boxplot(data=solar_pv_module_df, x='Year', y='Solar PV Module Price($)', ax=ax)
+# ax.set_title('Solar PV Price Distribution')
+# ax.set_xlabel('Year')
+# ax.set_ylabel('Solar PV Module Price($)')
+# ax.grid(True)
+# st.pyplot(fig)
+# plt.close(fig)
+# st.markdown("Write paragraph here")
+
+st.subheader("Solar PV Price Distribution Over Years")
+fig = px.bar(
+    solar_pv_module_df,
+    x="Year",
+    y="Solar PV Module Price($)",
+    color_discrete_sequence=["steelblue"]
+)
+st.plotly_chart(fig, use_container_width=True)
+st.markdown("Write paragraph here")
+
+
+
+yearly_solar_energy_generation = solar_df.copy()
+yearly_solar_energy_generation['Year'] = yearly_solar_energy_generation['Date'].dt.year
+yearly_solar_energy_generation = yearly_solar_energy_generation.groupby('Year', as_index=False)['Solar Generation (1000 MWh)'].sum()
+
+merged_solar_gen_and_module_price = pd.merge(solar_pv_module_df, yearly_solar_energy_generation, on='Year', how='inner')
+
+st.subheader("Solar Price vs Solar Energy Generation Relationship")
+fig = plt.figure(figsize=(6, 2))
+sns.lmplot(data=merged_solar_gen_and_module_price, x='Solar PV Module Price($)', y='Solar Generation (1000 MWh)', aspect=2)
+plt.title('Relationship between Solar PV Price and Solar Generation')
+plt.xlabel('Solar PV Price ($)')
+plt.ylabel('Solar Energy Generation (MWh)')
+plt.grid(True)
+st.pyplot(plt.gcf())
+plt.close()
+st.markdown("Write paragraph here")
+#-------------------------------------------------------------------------------------------------------
+
+# Natural Gas vs Solar Enegery generation cost comparison
+st.subheader('Energy Generation Prices using Natural Gas vs Using Solar')
+st.line_chart(comparison_df.set_index('Year'))
+
