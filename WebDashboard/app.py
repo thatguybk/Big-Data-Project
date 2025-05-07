@@ -500,9 +500,9 @@ with col3:
 #
 
 
-irradiance = allmerged_df[["Date", "GHI", "Clearsky GHI"]].copy()
+irradiance = allmerged_df[["Date", "GHI"]].copy()
 
-st.subheader('GHI vs GHI assuming Clear Skies (w/m^2)(1999-2023)')
+st.subheader('Average GHI over time (w/m^2) (1999-2023)')
 st.line_chart(irradiance.set_index('Date'))
 st.markdown("As seen in the graph above, there is a steady and constant fluctuation of GHI levels throughout the year. GHI usually peaks during summer months and then drops in the winter months.This makes sense as during summer there are usually more sunlight and irradiance for the solar panels whereas during winter there is less sunlight and irradiance due to snowfall and cold weather.")
 
@@ -622,25 +622,6 @@ fig = px.bar(
 st.plotly_chart(fig, use_container_width=True)
 st.markdown("Write paragraph here")
 
-
-
-yearly_solar_energy_generation = solar_df.copy()
-yearly_solar_energy_generation['Year'] = yearly_solar_energy_generation['Date'].dt.year
-yearly_solar_energy_generation = yearly_solar_energy_generation.groupby('Year', as_index=False)['Solar Generation (1000 MWh)'].sum()
-
-merged_solar_gen_and_module_price = pd.merge(solar_pv_module_df, yearly_solar_energy_generation, on='Year', how='inner')
-
-st.subheader("Solar Price vs Solar Energy Generation Relationship")
-fig = plt.figure(figsize=(6, 2))
-sns.lmplot(data=merged_solar_gen_and_module_price, x='Solar PV Module Price($)', y='Solar Generation (1000 MWh)', aspect=2)
-plt.title('Relationship between Solar PV Price and Solar Generation')
-plt.xlabel('Solar PV Price ($)')
-plt.ylabel('Solar Energy Generation (MWh)')
-plt.grid(True)
-st.pyplot(plt.gcf())
-plt.close()
-st.markdown("Write paragraph here")
-
 #-------------------------------------------------------------------------------------------------------
 #                                              ORLANDO COMPARISON CODE
 # Natural Gas vs Solar Enegery generation cost comparison
@@ -662,146 +643,13 @@ adam_solar_df = df[["Date", "Solar Generation (1000 MWh)", "Clearsky GHI", "GHI"
 # Convert to correct datetime format
 adam_solar_df["Year"] = adam_solar_df["Date"].dt.year
 
-st.header("☀️ Solar Energy Generation Analysis (2001-2025)")
-
-# Solar Generation Over Time
-fig_solar_gen = px.line(
-    adam_solar_df,
-    x="Date",
-    y="Solar Generation (1000 MWh)",
-    title="Solar Energy Generation Over Time (2001-2025)",
-    labels={"Solar Generation (1000 MWh)": "Solar Generation (1000 MWh)", "Date": "Year"},
-    color_discrete_sequence=["goldenrod"]
-)
-st.plotly_chart(fig_solar_gen, use_container_width=True)
-
-st.markdown("""
-Solar energy generation has steadily increased, particularly since 2010. 
-This reflects the growth in solar installations and infrastructure advancements in the United States.
-""")
-
-# Solar Irradiance: Actual vs. Clear Sky
-st.subheader("🌞 Actual vs. Clear Sky Global Horizontal Irradiance (GHI)")
-fig_ghi = px.line(
-    adam_solar_df,
-    x="Date",
-    y=["GHI", "Clearsky GHI"],
-    labels={"value": "Irradiance (W/m²)", "variable": "GHI Type", "Date": "Year"},
-    title="Comparison of Actual GHI vs Clearsky GHI (2001-2025)"
-)
-st.plotly_chart(fig_ghi, use_container_width=True)
-
-st.markdown("""
-This comparison highlights the actual irradiance levels received by solar panels compared to ideal clear-sky conditions.  
-The closer the actual GHI values are to clear-sky GHI, the more efficiently solar installations can perform.
-""")
-
-
-# --- Enhanced Solar Cost Analysis Section ---
-
-st.header("💸 Solar vs Natural Gas Electricity Generation Cost Analysis")
-
-# Load required data
-cost_analysis_df = df[["Date", "Solar Generation (1000 MWh)", "Natural Gas Avg Cost ($/Mcf)"]].copy()
-cost_analysis_df.dropna(inplace=True)  # Ensure clean data
-cost_analysis_df["Year"] = cost_analysis_df["Date"].dt.year
-
-# User input: Set solar generation cost per MWh
-solar_cost_input = st.slider(
-    "Set Estimated Solar Energy Generation Cost ($/MWh)",
-    min_value=10,
-    max_value=150,
-    value=50,
-    step=5,
-    help="This is the assumed average cost to generate 1 MWh of solar energy."
-)
-
-# Step 1: Convert generation to MWh
-cost_analysis_df["Solar Generation (MWh)"] = cost_analysis_df["Solar Generation (1000 MWh)"] * 1000
-
-# Step 2: Calculate cost columns
-cost_analysis_df["Solar_Cost_USD"] = cost_analysis_df["Solar Generation (MWh)"] * solar_cost_input
-cost_analysis_df["Natural_Gas_Cost_USD"] = cost_analysis_df["Solar Generation (MWh)"] * cost_analysis_df["Natural Gas Avg Cost ($/Mcf)"]
-
-# Step 3: Group by Year
-yearly_costs = cost_analysis_df.groupby("Year")[["Solar_Cost_USD", "Natural_Gas_Cost_USD"]].sum().reset_index()
-
-# Step 4: Prepare data for plotting
-costs_melted = yearly_costs.melt(id_vars="Year", var_name="Source", value_name="Total Cost (USD)")
-costs_melted["Source"] = costs_melted["Source"].replace({
-    "Solar_Cost_USD": f"Solar (${solar_cost_input}/MWh)",
-    "Natural_Gas_Cost_USD": "Natural Gas (Actual)"
-})
-
-# Plot
-a_fig = px.bar(
-    costs_melted,
-    x="Year",
-    y="Total Cost (USD)",
-    color="Source",
-    barmode="group",
-    title="Annual Cost Comparison: Solar vs Natural Gas Energy Generation",
-    labels={"Total Cost (USD)": "Total Annual Cost (USD)", "Year": "Year"},
-    color_discrete_sequence=["goldenrod", "steelblue"]
-)
-
-st.plotly_chart(a_fig, use_container_width=True)
-
-# Interpretation
-st.markdown(f"""
-### 🔍 Interpretation
-This visualization compares **estimated solar generation costs** (based on your input of **${solar_cost_input}/MWh**) against the **actual cost of generating electricity using natural gas** for the **same generation volume**.
-
-- Even with a conservative estimate of ${solar_cost_input}/MWh, solar becomes increasingly cost-competitive in later years.
-- Spikes in natural gas costs highlight fossil fuel price volatility.
-- This insight supports policy-making and investment planning in renewables.
-
-_This assumes both sources generate the same amount of energy for cost comparison._
-""")
-
-# # SOLAR COST ANALYSIS (Interactive)
-# st.header("💵 Solar Generation Cost Analysis")
-
-# # User adjustable solar cost per MWh
-# solar_cost_per_MWh = st.slider(
-#     "Select Estimated Solar Generation Cost ($/MWh)",
-#     min_value=10,
-#     max_value=150,
-#     value=50,
-#     step=5
-# )
-
-# # Recalculate total cost based on slider value every interaction
-# adam_solar_df["Total Solar Generation Cost ($USD)"] = (
-#     adam_solar_df["Solar Generation (1000 MWh)"] * 1000 * solar_cost_per_MWh
-# )
-
-# # Re-plot the chart after recalculation
-# fig_solar_cost = px.line(
-#     adam_solar_df,
-#     x="Date",
-#     y="Total Solar Generation Cost ($USD)",
-#     labels={
-#         "Total Solar Generation Cost ($USD)": "Total Cost (USD)",
-#         "Date": "Year"
-#     },
-#     title=f"Estimated Total Cost of Solar Energy Generation ($USD) at ${solar_cost_per_MWh}/MWh"
-# )
-
-# st.plotly_chart(fig_solar_cost, use_container_width=True)
-
-# st.markdown(f"""
-# The chart above shows the estimated total cost of solar energy generation using an assumed generation cost of **${solar_cost_per_MWh}/MWh**.  
-# This interactive analysis enables exploration of how the cost per megawatt-hour impacts overall expenses.
-# """)
-
 # CORRELATION BETWEEN SOLAR GENERATION AND GHI
 st.header("🔍 Correlation Analysis: Solar Generation vs. Irradiance")
 
-adam_corr_matrix = adam_solar_df[["Solar Generation (1000 MWh)", "GHI", "Clearsky GHI"]].corr()
+solar_corr_matrix = adam_solar_df[["Solar Generation (1000 MWh)", "GHI"]].corr()
 
 fig_corr, ax = plt.subplots(figsize=(6, 4))
-sns.heatmap(adam_corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
+sns.heatmap(solar_corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
 ax.set_title("Correlation Matrix: Solar Generation and GHI Metrics", fontsize=14)
 
 st.pyplot(fig_corr)
