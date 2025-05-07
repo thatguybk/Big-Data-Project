@@ -1,4 +1,4 @@
-Date,Temperature (F),Price ($/MCF),Imports (MMcf),Production (MMcf),Solar Generation (1000 MWh),Consumption (MMcf),Clearsky DHI,Clearsky DNI,Clearsky GHI,DHI,DNI,GHI,Natural Gas Generation (1000 MWh),Natural Gas Avg Cost ($/MWh)
+Date,Temperature (F),Price ($/Mcf),Imports (MMcf),Production (MMcf),Solar Generation (1000 MWh),Consumption (MMcf),Clearsky DHI,Clearsky DNI,Clearsky GHI,DHI,DNI,GHI,Natural Gas Generation (1000 MWh),Natural Gas Avg Cost ($/Mcf)
 1973-01-01,,,92694.0,,,,,,,,,,,
 1973-02-01,,,83870.0,,,,,,,,,,,
 1973-03-01,,,91581.0,,,,,,,,,,,
