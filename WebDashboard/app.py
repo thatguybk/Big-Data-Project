@@ -277,7 +277,7 @@ correlation = corr_df[["Price ($/Mcf)", "Temperature (F)"]].corr()
 
 # Plot the correlation heatmap
 st.subheader("Correlation Between Temperature and Natural Gas Import Price")
-fig, ax = plt.subplots(figsize=(4,2))
+fig, ax = plt.subplots(figsize=(4,1.8))
 sns.heatmap(correlation, annot=True, cmap="RdGy" , fmt=".2f", ax=ax)
 st.pyplot(fig)
 
@@ -303,7 +303,7 @@ print("Seasonal correlations between temperature and gas price:")
 print(season_correlations)
 
 # Visualize as bar chart
-fig, ax = plt.subplots(figsize=(3,2))
+fig, ax = plt.subplots(figsize=(7,2))
 sns.barplot(data=season_correlations, x="Season", y="Price ($/Mcf)", palette="Accent", ax=ax)
 ax.set_title("Correlation Between Temperature and Gas Price by Season")
 ax.set_ylabel("Correlation Coefficient")
@@ -375,7 +375,7 @@ correlation = corr_df[["Production (MMcf)", "Imports (MMcf)"]].corr()
 
 # Plot the correlation heatmap
 st.subheader("Correlation Matrix: Natural Gas Imports vs Production")
-fig, ax = plt.subplots(figsize=(4, 2))
+fig, ax = plt.subplots(figsize=(4, 1.8))
 sns.heatmap(correlation, annot=True, cmap="crest", ax=ax)
 st.pyplot(fig)
 
@@ -402,19 +402,19 @@ month_order = pd.date_range("2000-01-01", periods=12, freq="M").strftime("%B")
 
 
 # Create boxplots
-fig, axes = plt.subplots(2, 1, figsize=(12, 16), sharex=False)
+fig, axes = plt.subplots(1, 1, figsize=(10, 4), sharex=False)
 
-# 1. Imports
-sns.boxplot(
-    data=merged_df4,
-    x="Month Name",
-    y="Imports (MMcf)",
-    order=month_order,
-    ax=axes[0],
-    palette="crest",
-    width=0.5
-)
-axes[0].set_title("Seasonal Distribution of Natural Gas Imports")
+# # 1. Imports
+# sns.boxplot(
+#     data=merged_df4,
+#     x="Month Name",
+#     y="Imports (MMcf)",
+#     order=month_order,
+#     ax=axes[0],
+#     palette="crest",
+#     width=0.5
+# )
+# axes[0].set_title("Seasonal Distribution of Natural Gas Imports")
 
 #====SPLIT INTO TWO PAGES NOT TWO PLOTS ON THE SAME PAGE=====
 
@@ -424,12 +424,12 @@ sns.boxplot(
     x="Month Name",
     y="Price ($/Mcf)",
     order=month_order,
-    ax=axes[1],
+    ax=axes,
     palette="BuPu",
     width=0.5
 )
-axes[1].set_title("Seasonal Distribution of Natural Gas Import Prices")
-axes[1].set_xlabel("Month")
+axes.set_title("Seasonal Distribution of Natural Gas Import Prices")
+axes.set_xlabel("Month")
 
 plt.xticks(ticks=range(0, 12), labels=[
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -439,10 +439,9 @@ plt.xticks(ticks=range(0, 12), labels=[
 # Rotate x-axis labels for clarity
 
 
-for ax in axes:
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
-    ax.set_xlabel("-------------------------------------------------------------------------------------------------------------------------------------------- Month --------------------------------------------------------------------------------------------------------------------------------------------")
-    ax.grid(axis='y', linestyle='--', alpha=0.5)
+ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+ax.set_xlabel("-------------------------------------------------------------------------------------------------------------------------------------------- Month --------------------------------------------------------------------------------------------------------------------------------------------")
+ax.grid(axis='y', linestyle='--', alpha=0.5)
 
 # Display the plot
 plt.tight_layout(pad=2.5)
