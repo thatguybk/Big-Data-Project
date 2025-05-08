@@ -110,6 +110,26 @@ print(allmerged_df.dtypes)
 
 
 
+carbon_dioxide_df = pd.read_csv("data/Carbon Dioxide Emissions From Energy Consumption.csv")
+carbon_dioxide_df = carbon_dioxide_df[carbon_dioxide_df["Description"] == "Natural Gas Electric Power Sector CO2 Emissions"]
+
+carbon_dioxide_df = carbon_dioxide_df[["YYYYMM", "Value"]].rename(columns={
+    "YYYYMM": "Date",
+    "Value": "CO2 Emissions (Million Metric Tons)"
+})
+
+carbon_dioxide_df["Date"] = pd.to_datetime(carbon_dioxide_df["Date"].astype(str), format='%Y%m', errors='coerce').dt.to_period("M").dt.to_timestamp()
+
+carbon_dioxide_df = carbon_dioxide_df.dropna(subset=["Date"])
+carbon_dioxide_df = carbon_dioxide_df.sort_values("Date").reset_index(drop=True)
+carbon_dioxide_df = carbon_dioxide_df[carbon_dioxide_df["Date"].dt.year > 1998]
+
+# with st.expander("Carbon Dioxide DataFrame:"):
+#      st.subheader("Head")
+#      st.write(carbon_dioxide_df.head())
+#      st.subheader("Tail")
+#      st.write(carbon_dioxide_df.tail())
+
 # Load and process natural-gas-prices.csv
 ng_energy_generation_prices_df = pd.read_csv("data/natural-gas-prices.csv")
 ng_energy_generation_prices_df = ng_energy_generation_prices_df[['Year', 'Gas price']].rename(columns={'Gas price': 'Price ($/MWh)'})
@@ -308,6 +328,21 @@ total_imports = allmerged_df[["Imports (MMcf)", "Price ($/Mcf)", "Date"]].copy()
 total_imports["Total Import Cost"] = total_imports["Price ($/Mcf)"] * ( total_imports["Imports (MMcf)"] * 1000)
 total_imports = total_imports.dropna(subset=["Total Import Cost"])
 
+#Total cost to import over the years
+st.subheader("Total Natural Gas Import Cost (1999 - 2024)")
+fig = px.line(
+    total_imports,
+    x="Date",
+    y="Total Import Cost",
+    #title="Total Natural Gas Import Cost (1989 - 2024)",
+    labels={"Total Import Cost": "Total Import Cost (USD)"}
+)
+
+# Display in Streamlit
+st.plotly_chart(fig)
+
+st.markdown("By multiplying the import prices of natural gas by the quantities imported, we can see the total costs to import natural gas. The import price of natural gas is listed in the dataset as per thousand cubic feet ($/Mcf), and the quantity dataset displays the values int the unit of million cubic feet (MMcf). To normalize these values, we multiply the quantity by 1000 then multiply the result by the cost to get the total cost incurred by the US for importing natural gas. Nearing the end of 2005 the total costs to import natural gas spiked to around 4.4 Billion USD. This is likely due to the devastating hurricanes that occurred around that time. In April 2020, the total costs to import natural gas dropped to around 285 Million USD. This is likely due to the Covid-19pandemic and a surplus of natural gas imported and produced in the previous months.")
+
 st.subheader("U.S. Natural Gas Import Quantities (1999 - 2024)")
 fig = px.line(
     total_imports,
@@ -348,20 +383,7 @@ st.markdown(f"The above graphs show a negative correlation of {correlation.iloc[
 
 
 
-#Total cost to import over the years
-st.subheader("Total Natural Gas Import Cost (1999 - 2024)")
-fig = px.line(
-    total_imports,
-    x="Date",
-    y="Total Import Cost",
-    #title="Total Natural Gas Import Cost (1989 - 2024)",
-    labels={"Total Import Cost": "Total Import Cost (USD)"}
-)
 
-# Display in Streamlit
-st.plotly_chart(fig)
-
-st.markdown("By multiplying the import prices of natural gas by the quantities imported, we can see the total costs to import natural gas. The import price of natural gas is listed in the dataset as per thousand cubic feet ($/Mcf), and the quantity dataset displays the values int the unit of million cubic feet (MMcf). To normalize these values, we multiply the quantity by 1000 then multiply the result by the cost to get the total cost incurred by the US for importing natural gas. Nearing the end of 2005 the total costs to import natural gas spiked to around 4.4 Billion USD. This is likely due to the devastating hurricanes that occurred around that time. In April 2020, the total costs to import natural gas dropped to around 285 Million USD. This is likely due to the Covid-19pandemic and a surplus of natural gas imported and produced in the previous months.")
 
 
 #------------------SPLIT DIAGRAMS INTO TWO AND MOVE HIGHER UP TO CORRESPONDING AREAS------------------------
@@ -497,7 +519,21 @@ with col3:
 # Show in Streamlit
 #st.pyplot(fig)
 
-#
+# -----------------------------------------------------ADAM OLD GRAPHS---------------------------------------
+solar_pv_module_df = pd.read_csv("data/solar-pv-prices.csv")
+solar_pv_module_df = solar_pv_module_df[['Year', 'Solar photovoltaic module price']]
+solar_pv_module_df = solar_pv_module_df.rename(columns={'Solar photovoltaic module price': 'Solar PV Module Price($)'})
+
+st.subheader("Solar PV Price Distribution Over Years")
+fig = px.bar(
+    solar_pv_module_df,
+    x="Year",
+    y="Solar PV Module Price($)",
+    color_discrete_sequence=["steelblue"]
+)
+st.plotly_chart(fig, use_container_width=True)
+st.markdown("Write paragraph here")
+# -----------------------------------------------------ADAM OLD GRAPHS---------------------------------------
 
 
 irradiance = allmerged_df[["Date", "GHI"]].copy()
@@ -506,11 +542,53 @@ st.subheader('Average GHI over time (w/m^2) (1999-2023)')
 st.line_chart(irradiance.set_index('Date'))
 st.markdown("As seen in the graph above, there is a steady and constant fluctuation of GHI levels throughout the year. GHI usually peaks during summer months and then drops in the winter months.This makes sense as during summer there are usually more sunlight and irradiance for the solar panels whereas during winter there is less sunlight and irradiance due to snowfall and cold weather.")
 
+#-----------------------------------------------------ADAM NEW CODE---------------------------------------
+# Loading merged and cleaned dataset
+df = pd.read_csv("cleaned_merged_dataset.csv", parse_dates=["Date"])
+
+# Filter relevant columns for solar analysis
+adam_solar_df = df[["Date", "Solar Generation (1000 MWh)", "Clearsky GHI", "GHI"]].dropna().copy()
+
+# Convert to correct datetime format
+adam_solar_df["Year"] = adam_solar_df["Date"].dt.year
+
+# CORRELATION BETWEEN SOLAR GENERATION AND GHI
+st.header("🔍 Correlation Analysis: Solar Generation vs. Irradiance")
+
+solar_corr_matrix = adam_solar_df[["Solar Generation (1000 MWh)", "GHI"]].corr()
+
+fig_corr, ax = plt.subplots(figsize=(6, 4))
+sns.heatmap(solar_corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
+ax.set_title("Correlation Matrix: Solar Generation and GHI Metrics", fontsize=14)
+
+st.pyplot(fig_corr)
+
+st.markdown("""
+The correlation heatmap above indicates the strength of relationships between solar generation and irradiance metrics.  
+A strong positive correlation between solar generation and actual GHI implies better generation performance under high irradiance.
+""")
+# -----------------------------------------------------ADAM NEW CODE---------------------------------------
 
 generation = allmerged_df[["Date", "Natural Gas Generation (1000 MWh)", "Solar Generation (1000 MWh)"]].copy()
 st.subheader('Natural Gas Generation vs Solar Generation (1000 MWh) (2001-2025)')
 st.line_chart(generation.set_index('Date'))
 st.markdown("finish this writeup")
+
+emissions_merged = allmerged_df.merge(carbon_dioxide_df, on="Date", how="inner")
+corr_data = emissions_merged[[
+    "CO2 Emissions (Million Metric Tons)",
+    "Natural Gas Generation (1000 MWh)", 
+    "Solar Generation (1000 MWh)"
+]].corr()
+
+# Visualize
+st.subheader("Emission-Energy-Temperature Correlations")
+fig, ax = plt.subplots(figsize=(4,2))
+sns.heatmap(corr_data, annot=True, cmap="viridis", fmt=".2f", 
+            annot_kws={"size":12}, linewidths=.5, ax=ax)
+ax.set_title("Correlation Between Key Metrics", pad=20)
+st.pyplot(fig)
+st.markdown("Writeup here")
 
 corr_matrix = allmerged_df[["Natural Gas Generation (1000 MWh)", "Temperature (F)"]].corr()
 
@@ -596,32 +674,6 @@ fig = px.line(
 st.plotly_chart(fig)
 st.markdown("explanations: https://www.eia.gov/todayinenergy/detail.php?id=50798. Plot avg price to generate electricity from natural gas")
 
-#-----------------------------------------------------ADAM OLD GRAPHS---------------------------------------
-solar_pv_module_df = pd.read_csv("data/solar-pv-prices.csv")
-solar_pv_module_df = solar_pv_module_df[['Year', 'Solar photovoltaic module price']]
-solar_pv_module_df = solar_pv_module_df.rename(columns={'Solar photovoltaic module price': 'Solar PV Module Price($)'})
-
-# st.subheader("Solar PV Price Distribution Over Years")
-# fig, ax = plt.subplots(figsize=(10, 6))
-# sns.boxplot(data=solar_pv_module_df, x='Year', y='Solar PV Module Price($)', ax=ax)
-# ax.set_title('Solar PV Price Distribution')
-# ax.set_xlabel('Year')
-# ax.set_ylabel('Solar PV Module Price($)')
-# ax.grid(True)
-# st.pyplot(fig)
-# plt.close(fig)
-# st.markdown("Write paragraph here")
-
-st.subheader("Solar PV Price Distribution Over Years")
-fig = px.bar(
-    solar_pv_module_df,
-    x="Year",
-    y="Solar PV Module Price($)",
-    color_discrete_sequence=["steelblue"]
-)
-st.plotly_chart(fig, use_container_width=True)
-st.markdown("Write paragraph here")
-
 #-------------------------------------------------------------------------------------------------------
 #                                              ORLANDO COMPARISON CODE
 # Natural Gas vs Solar Enegery generation cost comparison
@@ -631,53 +683,3 @@ st.markdown("Write paragraph here")
 
 
 #-------------------------------------------------------------------------------------------------------
-
-
-#-----------------------------------------------------ADAM NEW CODE---------------------------------------
-# Loading merged and cleaned dataset
-df = pd.read_csv("cleaned_merged_dataset.csv", parse_dates=["Date"])
-
-# Filter relevant columns for solar analysis
-adam_solar_df = df[["Date", "Solar Generation (1000 MWh)", "Clearsky GHI", "GHI"]].dropna().copy()
-
-# Convert to correct datetime format
-adam_solar_df["Year"] = adam_solar_df["Date"].dt.year
-
-# CORRELATION BETWEEN SOLAR GENERATION AND GHI
-st.header("🔍 Correlation Analysis: Solar Generation vs. Irradiance")
-
-solar_corr_matrix = adam_solar_df[["Solar Generation (1000 MWh)", "GHI"]].corr()
-
-fig_corr, ax = plt.subplots(figsize=(6, 4))
-sns.heatmap(solar_corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
-ax.set_title("Correlation Matrix: Solar Generation and GHI Metrics", fontsize=14)
-
-st.pyplot(fig_corr)
-
-st.markdown("""
-The correlation heatmap above indicates the strength of relationships between solar generation and irradiance metrics.  
-A strong positive correlation between solar generation and actual GHI implies better generation performance under high irradiance.
-""")
-
-# ANNUAL SOLAR GENERATION GROWTH RATE
-st.header("📈 Annual Solar Generation Growth Rate (%)")
-
-annual_solar = adam_solar_df.groupby("Year")["Solar Generation (1000 MWh)"].sum().reset_index()
-annual_solar["Growth Rate (%)"] = annual_solar["Solar Generation (1000 MWh)"].pct_change() * 100
-
-fig_growth = px.bar(
-    annual_solar,
-    x="Year",
-    y="Growth Rate (%)",
-    title="Year-over-Year Solar Generation Growth Rate (%)",
-    labels={"Growth Rate (%)": "Growth Rate (%)", "Year": "Year"},
-    color="Growth Rate (%)",
-    color_continuous_scale="Sunsetdark"
-)
-st.plotly_chart(fig_growth, use_container_width=True)
-
-st.markdown("""
-This graph visualizes the annual growth rate of solar generation capacity, highlighting years with substantial increases 
-potentially due to advancements in technology or favorable policy changes.
-""")
-# --------------------------------------------END OF ADAM CODE--------------------------------------------
