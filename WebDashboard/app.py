@@ -584,15 +584,15 @@ corr_data = emissions_merged[[
 st.subheader("Emission-Energy-Temperature Correlations")
 fig, ax = plt.subplots(figsize=(4,2))
 sns.heatmap(corr_data, annot=True, cmap="viridis", fmt=".2f", 
-            annot_kws={"size":12}, linewidths=.5, ax=ax)
-ax.set_title("Correlation Between Key Metrics", pad=20)
+            annot_kws={"size":10}, linewidths=.5, ax=ax)
+ax.set_title("Correlation Between Key Metrics", pad=15)
 st.pyplot(fig)
 st.markdown("Writeup here")
 
 corr_matrix = allmerged_df[["Natural Gas Generation (1000 MWh)", "Temperature (F)"]].corr()
 
 # Create heatmap using seaborn
-fig, ax = plt.subplots(figsize=(6, 4))
+fig, ax = plt.subplots(figsize=(6, 3))
 sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
 ax.set_title("Correlation Matrix: Natural Gas Generation vs Temperature", fontsize=14)
 
@@ -632,7 +632,7 @@ month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
 corr_df["Month"] = corr_df["Month"].apply(lambda x: month_names[x - 1])
 
 # Plot
-fig, ax = plt.subplots(figsize=(10, 5))
+fig, ax = plt.subplots(figsize=(6, 3))
 bars = ax.bar(corr_df["Month"], corr_df["Correlation"], color="teal")
 ax.set_title("Monthly Correlation: Temperature vs Natural Gas Generation (2001–2025)", fontsize=14)
 ax.set_ylabel("Correlation Coefficient")
