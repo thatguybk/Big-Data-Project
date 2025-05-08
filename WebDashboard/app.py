@@ -524,7 +524,7 @@ solar_pv_module_df = pd.read_csv("data/solar-pv-prices.csv")
 solar_pv_module_df = solar_pv_module_df[['Year', 'Solar photovoltaic module price']]
 solar_pv_module_df = solar_pv_module_df.rename(columns={'Solar photovoltaic module price': 'Solar PV Module Price($)'})
 
-st.subheader("Solar PV Price Distribution Over Years")
+st.subheader("Solar Photovoltaic (PV) Module Price Distribution Over Years")
 fig = px.bar(
     solar_pv_module_df,
     x="Year",
@@ -536,11 +536,11 @@ st.markdown("Write paragraph here")
 # -----------------------------------------------------ADAM OLD GRAPHS---------------------------------------
 
 
-irradiance = allmerged_df[["Date", "GHI"]].copy()
+# irradiance = allmerged_df[["Date", "GHI"]].copy()
 
-st.subheader('Average GHI over time (w/m^2) (1999-2023)')
-st.line_chart(irradiance.set_index('Date'))
-st.markdown("As seen in the graph above, there is a steady and constant fluctuation of GHI levels throughout the year. GHI usually peaks during summer months and then drops in the winter months.This makes sense as during summer there are usually more sunlight and irradiance for the solar panels whereas during winter there is less sunlight and irradiance due to snowfall and cold weather.")
+# st.subheader('Average GHI over time (w/m^2) (1999-2023)')
+# st.line_chart(irradiance.set_index('Date'))
+# st.markdown("As seen in the graph above, there is a steady and constant fluctuation of GHI levels throughout the year. GHI usually peaks during summer months and then drops in the winter months.This makes sense as during summer there are usually more sunlight and irradiance for the solar panels whereas during winter there is less sunlight and irradiance due to snowfall and cold weather.")
 
 #-----------------------------------------------------ADAM NEW CODE---------------------------------------
 # Loading merged and cleaned dataset
@@ -557,9 +557,9 @@ st.header("🔍 Correlation Analysis: Solar Generation vs. Irradiance")
 
 solar_corr_matrix = adam_solar_df[["Solar Generation (1000 MWh)", "GHI"]].corr()
 
-fig_corr, ax = plt.subplots(figsize=(6, 4))
+fig_corr, ax = plt.subplots(figsize=(4, 2))
 sns.heatmap(solar_corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
-ax.set_title("Correlation Matrix: Solar Generation and GHI Metrics", fontsize=14)
+ax.set_title("Correlation Matrix: Solar Generation and GHI Metrics", fontsize=8)
 
 st.pyplot(fig_corr)
 
