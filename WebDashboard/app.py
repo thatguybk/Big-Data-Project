@@ -341,7 +341,7 @@ fig = px.line(
 # Display in Streamlit
 st.plotly_chart(fig)
 
-st.markdown("By multiplying the import prices of natural gas by the quantities imported, we can see the total costs to import natural gas. The import price of natural gas is listed in the dataset as per thousand cubic feet ($/Mcf), and the quantity dataset displays the values int the unit of million cubic feet (MMcf). To normalize these values, we multiply the quantity by 1000 then multiply the result by the cost to get the total cost incurred by the US for importing natural gas. Nearing the end of 2005 the total costs to import natural gas spiked to around 4.4 Billion USD. This is likely due to the devastating hurricanes that occurred around that time. In April 2020, the total costs to import natural gas dropped to around 285 Million USD. This is likely due to the Covid-19pandemic and a surplus of natural gas imported and produced in the previous months.")
+st.markdown("By multiplying the import prices of natural gas by the quantities imported, we can see the total costs to import natural gas. The import price of natural gas is listed in the dataset as per thousand cubic feet ($/Mcf), and the quantity dataset displays the values int the unit of million cubic feet (MMcf). To normalize these values, we multiply the quantity by 1000 then multiply the result by the cost to get the total cost incurred by the US for importing natural gas. Nearing the end of 2005 the total costs to import natural gas spiked to around 4.4 Billion USD. This is likely due to the devastating hurricanes that occurred around that time. In April 2020, the total costs to import natural gas dropped to around 285 Million USD. This is likely due to the Covid-19 pandemic and a surplus of natural gas imported and produced in the previous months.")
 
 st.subheader("U.S. Natural Gas Import Quantities (1999 - 2024)")
 fig = px.line(
@@ -531,7 +531,7 @@ fig = px.bar(
     color_discrete_sequence=["steelblue"]
 )
 st.plotly_chart(fig, use_container_width=True)
-st.markdown("Write paragraph here")
+st.markdown("The price of Solar Photovoltaic (PV) panels have gradually decreased over the years. Prices hit an all time low of 0.31 USD per Watt in 2023. This trend is likely due to the increased production, popularity and availability of solar panels and energy. According to a blog post on Our World In Data, solar pv panel prices abide by 'Wrights Law'. Wrights Law states that the cost of technology falls consistently as the cumulative production of that technology increases.")
 # -----------------------------------------------------ADAM OLD GRAPHS---------------------------------------
 
 
@@ -563,15 +563,17 @@ ax.set_title("Correlation Matrix: Solar Generation and GHI Metrics", fontsize=8)
 st.pyplot(fig_corr)
 
 st.markdown("""
-The correlation heatmap above indicates the strength of relationships between solar generation and irradiance metrics.  
-A strong positive correlation between solar generation and actual GHI implies better generation performance under high irradiance.
+The correlation heatmap above indicates the strength of relationships between solar energy generation and irradiance metrics.  
+A coefficient of 0.11 indicates a weak positive correlation between solar energy generation and actual GHI. This implies that solar panels have a slightly better generation performance under high irradiance.
 """)
 # -----------------------------------------------------ADAM NEW CODE---------------------------------------
 
 generation = allmerged_df[["Date", "Natural Gas Generation (1000 MWh)", "Solar Generation (1000 MWh)"]].copy()
 st.subheader('Natural Gas Generation vs Solar Generation (1000 MWh) (2001-2025)')
 st.line_chart(generation.set_index('Date'))
-st.markdown("finish this writeup")
+st.markdown("Between the years of 2001 and 2005, natural gas significantly generated more energy than solar power. This is backed by the book 'Sustainable Energy In America 2025 Factbook' which states that Natural Gas is the the largest source of energy generation in the United States followed by renewable energy sources. Both natural gas and solar energy generations gradually increased over the years. This is likely due to population increases and increased implemenation of electronics//technology. It is also seen that there is some seasonal correlation with energy generation as the amount of energy generated during the summer/warmer months is higher than the winter/colder months. ")
+
+
 
 emissions_merged = allmerged_df.merge(carbon_dioxide_df, on="Date", how="inner")
 corr_data = emissions_merged[[
@@ -588,7 +590,7 @@ sns.heatmap(corr_data, annot=True, cmap="viridis", fmt=".2f",
 ax.set_title("Correlation Between Key Metrics", pad=15)
 plt.xticks(rotation=15, ha='right')
 st.pyplot(fig)
-st.markdown("Writeup here")
+st.markdown("Both Natural Gas Energy Generations and Solar Energy Generation have strong direct relationships with Carbon Dioxide Emissions (CO2). This means that as the amount of energy generated increases, the amount of carbon dioxide emissions also increases. Natural Gas has a stronger relationship with CO2 than Solar Energy as solar energy typically has less CO2 emissions and has more potential to reduce greenhouse gas emissions.")
 
 corr_matrix = allmerged_df[["Natural Gas Generation (1000 MWh)", "Temperature (F)"]].corr()
 
@@ -599,7 +601,7 @@ ax.set_title("Correlation Matrix: Natural Gas Generation vs Temperature", fontsi
 
 
 # Display using Streamlit
-st.subheader("Natural Gas Generation & Temperature Correlation")
+st.subheader("Natural Gas Energy Generation & Temperature Correlation")
 st.pyplot(fig)
 
 
