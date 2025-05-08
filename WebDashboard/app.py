@@ -586,6 +586,7 @@ fig, ax = plt.subplots(figsize=(4,2))
 sns.heatmap(corr_data, annot=True, cmap="viridis", fmt=".2f", 
             annot_kws={"size":10}, linewidths=.5, ax=ax)
 ax.set_title("Correlation Between Key Metrics", pad=15)
+plt.xticks(rotation=15, ha='right')
 st.pyplot(fig)
 st.markdown("Writeup here")
 
@@ -595,6 +596,7 @@ corr_matrix = allmerged_df[["Natural Gas Generation (1000 MWh)", "Temperature (F
 fig, ax = plt.subplots(figsize=(6, 3))
 sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
 ax.set_title("Correlation Matrix: Natural Gas Generation vs Temperature", fontsize=14)
+
 
 # Display using Streamlit
 st.subheader("Natural Gas Generation & Temperature Correlation")
