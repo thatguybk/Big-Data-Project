@@ -675,7 +675,7 @@ fig = px.line(
 
 # Display in Streamlit
 st.plotly_chart(fig)
-st.markdown("explanations: https://www.eia.gov/todayinenergy/detail.php?id=50798. Plot avg price to generate electricity from natural gas")
+st.markdown("To calculate the total cost to generate the amount of electricty, we multiply the average cost to generate electricty using natural gas ($/Mcf) by the amount of natural gas consumed (MMcf). Due to these two factors being different units, the amount of natural gas consumed (MMcf) was converted to cubic feet (Mcf) by multiplying by 1000. Both factors were then multiplied to get the total cost to generate electricity. Between 2009 and 2020 the cost usually rises and falls around the same amount. However, in February 2021, the cost of generating electricity using natural gas experienced its largest spike. The cost spiked from around 2.8 Billion USD to around 13.9 Billion USD. According to Energy Information Administration (EIA), this was due to the extremely low temperatures caused by a winter storm. After the storm passed, costs returned to around 2.5 Billion USD next month. Antother large spike was experienced in August 2022, where costs rose to 12.8 Billion USD. This was likely due to the Russian invasion of Ukraine, U.S military conflict in Afghanistan, and flash flooding.")
 
 #-------------------------------------------------------------------------------------------------------
 #                                              ORLANDO COMPARISON CODE
