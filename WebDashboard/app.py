@@ -431,7 +431,7 @@ A coefficient of 0.11 indicates a weak positive correlation between solar energy
 generation = allmerged_df[["Date", "Natural Gas Generation (1000 MWh)", "Solar Generation (1000 MWh)"]].copy()
 st.subheader('Natural Gas Generation vs Solar Generation (1000 MWh) (2001-2025)')
 st.line_chart(generation.set_index('Date'))
-st.markdown("Between the years of 2001 and 2025, natural gas significantly generated more energy than solar power. This is backed by the book 'Sustainable Energy In America 2025 Factbook' which states that Natural Gas is the the largest source of energy generation in the United States followed by renewable energy sources. Both natural gas and solar energy generations gradually increased over the years. This is likely due to population increases and increased implemenation of electronics//technology. It is also seen that there is some seasonal correlation with energy generation as the amount of energy generated during the summer/warmer months is higher than the winter/colder months. ")
+st.markdown("Between the years of 2001 and 2025, natural gas significantly generated more energy than solar power. This is backed by the book 'Sustainable Energy In America 2025 Factbook' which states that Natural Gas is the the largest source of energy generation in the United States followed by renewable energy sources. Both natural gas and solar energy generations gradually increased over the years. This is likely due to population increases and increased implementation of electronics/technology. It is also seen that there is some seasonal correlation with energy generation as the amount of energy generated during the summer/warmer months is higher than the winter/colder months. ")
 
 
 
