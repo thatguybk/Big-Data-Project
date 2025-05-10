@@ -116,7 +116,7 @@ allmerged_df = allmerged_df.sort_values("Date").reset_index(drop=True) # Sort an
 
 
 # Load and process Carbon Dioxide Emissions Data
-carbon_dioxide_df = pd.read_csv("https://raw.githubusercontent.com/thatguybk/Big-Data-Project/main/WebDashboard/data/Carbon Dioxide Emissions From Energy Consumption.csv")
+carbon_dioxide_df = pd.read_csv("https://raw.githubusercontent.com/thatguybk/Big-Data-Project/main/WebDashboard/data/Carbon_Dioxide_Emissions_From_Energy_Consumption.csv")
 carbon_dioxide_df = carbon_dioxide_df.rename(columns={ "YYYYMM": "Date", "Value": "CO2 Emissions (Million Metric Tons)"})
 # carbon_dioxide_df = carbon_dioxide_df[["YYYYMM", "Value"]].rename(columns={
 #     "YYYYMM": "Date",
