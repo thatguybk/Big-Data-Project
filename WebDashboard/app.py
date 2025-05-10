@@ -22,7 +22,8 @@ price_df = price_df.dropna(subset=["Date", "Price ($/Mcf)"])
 
 
 # Quantity of Natural Gas Imported
-import_df = pd.read_csv("data/Natural_Gas_Import_Quantity.csv", skiprows=2, parse_dates=["Date"])
+url = "https://raw.githubusercontent.com/thatguybk/Big-Data-Project/main/WebDashboard/data/Natural_Gas_Import_Quantity.csv"
+import_df = pd.read_csv(url, skiprows=2, parse_dates=["Date"])
 import_df.columns = ["Date", "Imports (MMcf)"]
 import_df["Date"] = pd.to_datetime(import_df["Date"])
 import_df["Date"] = pd.to_datetime(import_df["Date"]).dt.to_period("M").dt.to_timestamp()
