@@ -214,8 +214,6 @@ st.markdown("The chart above shows the cost to generate electricity from Natural
 st.markdown("This trend is encouraging for the future of renewable energy, as it suggests that Solar energy may soon become a more viable option for electricity generation. As technology continues to improve and costs decrease, we may see a shift towards greater adoption of Solar energy in the coming years.")
 st.markdown("There are many factors that affect the price to generate electricity from Natural Gas and Solar, we will explore some of them in the next sections to identify the spike of Naatural Gas in 2022.")
 st.header("Natural Gas Analysis")
-st.markdown("There are two ways to obtain Natural Gas, either by importing it or producing it. First we will explore the importation Natural Gas into the US.")
-
 
 
 # 1. Highest Monthly Import
@@ -242,6 +240,26 @@ with col2:
     st.metric(label="🏭 Highest Production Year", value=f"{highest_production_year.year}", delta=f"{highest_production_value:,.0f} units")
 with col3:
     st.metric(label="💰 Highest Monthly Import Cost", value=f"${max_cost_value:,.0f}", delta=max_cost_date)
+
+
+
+st.markdown("There are two ways to obtain Natural Gas, either by importing it or producing it. First we will explore the importation Natural Gas into the US.")
+
+
+
+# Cost to Generate Energy Consumed using Natural Gas
+cost_to_generate = allmerged_df[["Date", "Natural Gas Avg Cost ($/Mcf)", "Consumption (MMcf)"]].copy()
+cost_to_generate = cost_to_generate[cost_to_generate["Date"].dt.year > 2007]
+cost_to_generate["Cost to Generate Electricity ($/Mcf)"] = cost_to_generate["Natural Gas Avg Cost ($/Mcf)"] * (cost_to_generate["Consumption (MMcf)"] * 1000)
+st.subheader("Cost to Generate Electricity from Natural Gas(2008 - 2025)")
+fig = px.line(
+    cost_to_generate,
+    x="Date",
+    y="Cost to Generate Electricity ($/Mcf)",
+    #labels={"Total Import Cost": "Total Import Cost (USD)"}
+)
+st.plotly_chart(fig)
+st.markdown("To calculate the total cost to generate the amount of electricty, we multiply the average cost to generate electricty using natural gas ($/Mcf) by the amount of natural gas consumed (MMcf). Due to these two factors being different units, the amount of natural gas consumed (MMcf) was converted to cubic feet (Mcf) by multiplying by 1000. Both factors were then multiplied to get the total cost to generate electricity. Between 2009 and 2020 the cost usually rises and falls around the same amount. However, in February 2021, the cost of generating electricity using natural gas experienced its largest spike. The cost spiked from around 2.8 Billion USD to around 13.9 Billion USD. According to Energy Information Administration (EIA), this was due to the extremely low temperatures caused by a winter storm. After the storm passed, costs returned to around 2.5 Billion USD next month. Antother large spike was experienced in August 2022, where costs rose to 12.8 Billion USD. This was likely due to the Russian invasion of Ukraine, U.S military conflict in Afghanistan, and flash flooding.")
 
 
 
