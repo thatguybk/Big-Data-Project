@@ -405,7 +405,7 @@ fig = px.bar(
     solar_pv_module_df,
     x="Year",
     y="Solar PV Module Price($)",
-    color_discrete_sequence=["steelblue"]
+    color_discrete_sequence=["gold"]
 )
 st.plotly_chart(fig, use_container_width=True)
 st.markdown("The price of Solar Photovoltaic (PV) panels have gradually decreased over the years. Prices hit an all time low of 0.31 USD per Watt in 2023. This trend is likely due to the increased production, popularity and availability of solar panels and energy. According to a blog post on Our World In Data, solar pv panel prices abide by 'Wrights Law'. Wrights Law states that the cost of technology falls consistently as the cumulative production of that technology increases.")
@@ -418,7 +418,7 @@ fig = px.line(
     lcoe_df,
     x="Year",
     y="Solar LCOE ($/KWh)",
-    labels={"Solar LCOE ($/KWh)": "Levelized Cost of Energy (LCOE) for Solar ($/KWh)"}
+    color_discrete_sequence=["gold"]
 )
 st.plotly_chart(fig)
 
@@ -429,7 +429,8 @@ st.subheader("Solar Energy Generation (2001 - 2024)")
 fig = px.line(
     allmerged_df,
     x="Date",
-    y="Solar Generation (1000 MWh)"
+    y="Solar Generation (1000 MWh)",
+    color_discrete_sequence=["gold"]
 )
 st.plotly_chart(fig)
 
@@ -440,7 +441,8 @@ st.subheader("Solar Energy Generation Cost (2010 - 2023)")
 fig = px.line(
     merged_lcoe,
     x="Year",
-    y="Solar Cost ($ USD)"
+    y="Solar Cost ($ USD)",
+    color_discrete_sequence=["gold"]
 )
 st.plotly_chart(fig)
 
