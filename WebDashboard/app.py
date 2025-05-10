@@ -4,6 +4,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
 import altair as alt
+import plotly.graph_objects as go
 
 # Set Dashboard configuration
 st.set_page_config(page_title="Natural Gas Environmental Impact", layout="wide")
@@ -112,17 +113,25 @@ allmerged_df = allmerged_df.sort_values("Date").reset_index(drop=True) # Sort an
 
 # Load and process Carbon Dioxide Emissions Data
 carbon_dioxide_df = pd.read_csv("data/Carbon Dioxide Emissions From Energy Consumption.csv")
-carbon_dioxide_df = carbon_dioxide_df[carbon_dioxide_df["Description"] == "Natural Gas Electric Power Sector CO2 Emissions"]
-
-carbon_dioxide_df = carbon_dioxide_df[["YYYYMM", "Value"]].rename(columns={
-    "YYYYMM": "Date",
-    "Value": "CO2 Emissions (Million Metric Tons)"
-})
+carbon_dioxide_df = carbon_dioxide_df.rename(columns={ "YYYYMM": "Date", "Value": "CO2 Emissions (Million Metric Tons)"})
+# carbon_dioxide_df = carbon_dioxide_df[["YYYYMM", "Value"]].rename(columns={
+#     "YYYYMM": "Date",
+#     "Value": "CO2 Emissions (Million Metric Tons)",
+#     "Description" : "Description"
+# })
 
 carbon_dioxide_df["Date"] = pd.to_datetime(carbon_dioxide_df["Date"].astype(str), format='%Y%m', errors='coerce').dt.to_period("M").dt.to_timestamp()
 carbon_dioxide_df = carbon_dioxide_df.dropna(subset=["Date"])
 carbon_dioxide_df = carbon_dioxide_df.sort_values("Date").reset_index(drop=True)
 carbon_dioxide_df = carbon_dioxide_df[carbon_dioxide_df["Date"].dt.year > 1998]
+
+total_carbon_dioxide_df = carbon_dioxide_df[carbon_dioxide_df["Description"] == "Total Energy Electric Power Sector CO2 Emissions"]
+#total_carbon_dioxide_df = total_carbon_dioxide_df[total_carbon_dioxide_df["Date"].dt.year > 2001]
+ng_carbon_dioxide_df = carbon_dioxide_df[carbon_dioxide_df["Description"] == "Natural Gas Electric Power Sector CO2 Emissions"]
+ng_carbon_dioxide_df = ng_carbon_dioxide_df.rename(columns={ "Date": "Date", "CO2 Emissions (Million Metric Tons)": "Natural Gas CO2 Emissions (Million Metric Tons)"})
+
+
+
 
 
 # Load and process Natural Gas Prices to Generate Electricity
@@ -158,6 +167,8 @@ merged_gas['Natural Gas Cost ($ USD)'] = (
 )
 
 
+
+
 # Calculate Solar Cost (in USD)
 merged_lcoe['Solar Cost ($ USD)'] = (
     merged_lcoe['Natural Gas Generation (1000 MWh)'] * 1000 * 1000 *  # Convert to kWh (1 thousand MWh = 1,000,000 kWh)
@@ -173,29 +184,83 @@ comparison_df = pd.merge(
     how='inner'
 )
 
-# ------------------------------------------------------------END OF DATA LOADING AND CLEANING--------------------------------------------------------------------
+
+
+
+solar_pv_module_df = pd.read_csv("data/solar-pv-prices.csv")
+solar_pv_module_df = solar_pv_module_df[['Year', 'Solar photovoltaic module price']]
+solar_pv_module_df = solar_pv_module_df.rename(columns={'Solar photovoltaic module price': 'Solar PV Module Price($)'})
+
+
+total_imports = allmerged_df[["Imports (MMcf)", "Price ($/Mcf)", "Date"]].copy()
+total_imports["Total Import Cost"] = total_imports["Price ($/Mcf)"] * ( total_imports["Imports (MMcf)"] * 1000)# Calculate Total cost to import natural gas 
+total_imports = total_imports.dropna(subset=["Total Import Cost"])
+
+
 
 # Dashboard Overview
 st.title(" Renewable Energy Feasibility Dashboard (USA)")
-st.markdown("This dashboard provides insights into the environmental impact of natural gas imports in the United States and the associated economic strain of implementing Solar power generation.") 
+st.markdown("This dashboard provides insights into the environmental impact of natural gas in the United States and the associated economic strain of implementing Solar power generation.") 
 st.markdown("Our goal is to explore the economic implications of natural gas imports and solar power generation in the United States of America. We analyze the trends in natural gas prices and quantities imported, as well as the growth of solar energy generation over time. This analysis will help understand the potential benefits or disadvantages of transitioning to renewable energy sources. We also explore at what year it would make the most sense to implement Solar Power in the form of Photovoltaic cells, to match the amount of energy generated using natural gas.")
-st.markdown("There are many Factors that affect the price of natural gas imports including weather, temperature, natural disasters and other events that disrupt supply chains. We explore these factors in the following sections.")
+
+
+
+# Natural Gas vs Solar Energy generation cost comparison
+st.subheader('Cost to generate Electricity from Natural Gas vs Solar')
+st.line_chart(comparison_df.set_index('Year'))
+
+
+st.markdown("The chart above shows the cost to generate electricity from Natural Gas and Solar energy over the years. The data indicates that the cost of generating electricity from Natural Gas has been consistently lower than that of Solar energy. However, the gap between the two has been narrowing, suggesting that Solar energy is becoming more competitive in terms of cost.")
+st.markdown("This trend is encouraging for the future of renewable energy, as it suggests that Solar energy may soon become a more viable option for electricity generation. As technology continues to improve and costs decrease, we may see a shift towards greater adoption of Solar energy in the coming years.")
+st.markdown("There are many factors that affect the price to generate electricity from Natural Gas and Solar, we will explore some of them in the next sections to identify the spike of Naatural Gas in 2022.")
+st.header("Natural Gas Analysis")
+st.markdown("There are two ways to obtain Natural Gas, either by importing it or producing it. First we will explore the importation Natural Gas into the US.")
+
+
+
+# 1. Highest Monthly Import
+max_import_row = allmerged_df.loc[allmerged_df["Imports (MMcf)"].idxmax()]
+max_import_value = max_import_row["Imports (MMcf)"]
+max_import_date = max_import_row["Date"].strftime("%b %Y")
+
+# 2. Year with Highest Production
+yearly_production = allmerged_df.groupby("Date")["Production (MMcf)"].sum()
+highest_production_year = yearly_production.idxmax()
+highest_production_value = yearly_production.max()
+
+# 3. Month with Highest Cost
+max_cost_row = total_imports.loc[total_imports["Total Import Cost"].idxmax()]
+max_cost_value = max_cost_row["Total Import Cost"]
+max_cost_date = max_cost_row["Date"].strftime("%b %Y")
+
+# Display metrics
+st.subheader("📊 Key Highlights")
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric(label="📈 Highest Monthly Import", value=f"{max_import_value:,.0f} MMcf", delta=max_import_date)
+with col2:
+    st.metric(label="🏭 Highest Production Year", value=f"{highest_production_year.year}", delta=f"{highest_production_value:,.0f} units")
+with col3:
+    st.metric(label="💰 Highest Monthly Import Cost", value=f"${max_cost_value:,.0f}", delta=max_cost_date)
 
 
 
 
-# Natural Gas Import Price Analysis
-st.subheader("Natural Gas Import Price (1999 - 2024)")
-fig = px.bar(
-    allmerged_df,
+# Natural Gas Imports 
+# Total cost to import over the years
+
+
+st.subheader("Total Natural Gas Import Cost (1999 - 2024)")
+fig = px.line(
+    total_imports,
     x="Date",
-    y="Price ($/Mcf)",
-    color_discrete_sequence=["steelblue"]
+    y="Total Import Cost",
+    #title="Total Natural Gas Import Cost (1989 - 2024)",
+    labels={"Total Import Cost": "Total Import Cost (USD)"}
 )
-st.plotly_chart(fig, use_container_width=True)
-st.markdown("The price of natural gas has fluctuated over the years, with notable peaks and troughs. This data is crucial for understanding the economic implications of natural gas imports and the potential benefits of transitioning to renewable energy sources. In October 2005, according to the U.S. Energy Information Administration (EIA), the price of natural gas imports was at an all time high of 11.99 USD per thousand cubic feet (USD/Mcf). This was a significant increase from the previous year, when the price was around 5.38 (USD/Mcf). The increase in price was attributed to several factors, including production disruption and increased demand for natural gas due to Hurricane Katrina, Hurricane Rita and other weather-related events that disrupted supply and production chains. Prices also spiked to 9.11 (USD/Mcf) in February 2014 when compared to previous months and years where prices were around 3 to 4 (USD/Mcf) due to extremely cold weather. Another sudden rise in price occurred in December 2022. This was likely due to several reasons such as the Russian invasion of Ukraine, increased global demand for LNG and supply chain disruptions caused by the Covid-19 pandemic.")
-
-
+st.plotly_chart(fig)
+st.markdown("By multiplying the import prices of natural gas by the quantities imported, we can see the total costs to import natural gas. Nearing the end of 2005 the total costs to import natural gas spiked to around 4.4 Billion USD. This is likely due to the devastating hurricanes that occurred around that time. In April 2020, the total costs to import natural gas dropped to around 285 Million USD. This is likely due to the Covid-19 pandemic and a surplus of natural gas imported and produced in the previous months. In December 2022 the total cost rose to around 2.86 billion USD due to the Russian invasion of Ukraine creating disruptions and shortages according to the article 'Reasons behind the 2022 energy price increases and prospects for next year'.")
+st.markdown("According to the US Energy Information Administration, temperature plays a major role in the price to import natural gas.")
 
 
 # Temperature Analysis
@@ -205,10 +270,7 @@ st.markdown("This chart illustrates the temperature trends in the U.S from 1999 
 fig = px.line(allmerged_df.dropna(subset=["Temperature (F)"]), x="Date", y="Temperature (F)")
 st.plotly_chart(fig)
 
-st.markdown("The data shows a steady increase in temperature, which is consistent with the global trend of rising temperatures due to climate change. In other words, there are higher highs and higher lows. The lowest average temperature was in February 2010 due to a blizzard whereas the highest average temperature was in November 2024 due to increased greenhouse gas emissions and ocean heat absorption. The data also shows seasonal variations, with higher temperatures in the summer months and lower temperatures in the winter months. As temperature decreases the demand for natural gas increases, leading to higher prices. The data shows a clear correlation between temperature and the price of natural gas imports. For example, in February 2014, the average temperature in the U.S was significantly lower than in previous years, leading to a spike in natural gas import prices. This trend is also evident in the winter of 2000/2001, when low temperatures led to increased demand for natural gas and higher prices.")
-
-
-
+st.markdown("The data shows a steady increase in temperature, which is consistent with the global trend of rising temperatures due to climate change. In other words, there are higher highs and higher lows. The lowest average temperature was in February 2010 due to a blizzard whereas the highest average temperature was in November 2024 due to increased greenhouse gas emissions and ocean heat absorption. The data also shows seasonal variations, with higher temperatures in the summer months and lower temperatures in the winter months. As temperature decreases the demand for natural gas increases, leading to higher prices. The data shows a clear correlation between temperature and the price of natural gas imports. For example, in February 2014, the average temperature in the U.S was significantly lower than in previous years, leading to a spike in natural gas import prices. This trend is also evident in the winter of 2000/2001, when low temperatures led to increased demand for natural gas and higher prices. ")
 
 # Natural Gas Import Price vs Temperature Correlation
 corr_df = allmerged_df[["Price ($/Mcf)", "Temperature (F)", "Date"]].dropna(subset=["Price ($/Mcf)", "Temperature (F)"])
@@ -252,30 +314,6 @@ for season, corr in zip(season_correlations['Season'], season_correlations['Pric
 
 st.markdown("Since the Winter season has the largest negative correlation coefficient, the inverse relationship between temperature and natural gas price is more pronounced than in the other seasons. The correlation is skewed due to other factors, such as natural disasters and supply chain disruptions, affecting the price of natural gas.")
 
-
-
-
-
-# Total cost to import over the years
-total_imports = allmerged_df[["Imports (MMcf)", "Price ($/Mcf)", "Date"]].copy()
-total_imports["Total Import Cost"] = total_imports["Price ($/Mcf)"] * ( total_imports["Imports (MMcf)"] * 1000)# Calculate Total cost to import natural gas 
-total_imports = total_imports.dropna(subset=["Total Import Cost"])
-
-st.subheader("Total Natural Gas Import Cost (1999 - 2024)")
-fig = px.line(
-    total_imports,
-    x="Date",
-    y="Total Import Cost",
-    #title="Total Natural Gas Import Cost (1989 - 2024)",
-    labels={"Total Import Cost": "Total Import Cost (USD)"}
-)
-st.plotly_chart(fig)
-st.markdown("By multiplying the import prices of natural gas by the quantities imported, we can see the total costs to import natural gas. The import price of natural gas is listed in the dataset as per thousand cubic feet ($/Mcf), and the quantity dataset displays the values int the unit of million cubic feet (MMcf). To normalize these values, we multiply the quantity by 1000 then multiply the result by the cost to get the total cost incurred by the US for importing natural gas. Nearing the end of 2005 the total costs to import natural gas spiked to around 4.4 Billion USD. This is likely due to the devastating hurricanes that occurred around that time. In April 2020, the total costs to import natural gas dropped to around 285 Million USD. This is likely due to the Covid-19 pandemic and a surplus of natural gas imported and produced in the previous months. In December 2022 the total cost rose to around 2.86 billion USD due to the Russian invasion of Ukraine creating disruptions and shortages according to the article 'Reasons behind the 2022 energy price increases and prospects for next year'.")
-
-
-
-
-
 # Total Natural Gas Import Quantities over the years
 st.subheader("U.S. Natural Gas Import Quantities (1999 - 2024)")
 fig = px.line(
@@ -285,11 +323,12 @@ fig = px.line(
     labels={"U.S. Natural Gas Imports (MMcf)": "Natural Gas Imported (MMcf)"}
 )
 st.plotly_chart(fig)
-st.markdown("The quantity of natural gas imported into the US has fluctuated over the years, with notable peaks and troughs. The data shows a steady increase in the quantity of natural gas imported until 2008, reflecting the growing demand for natural gas in the US. After 2008 the US increased its domestic production of natural gas. The data also shows seasonal variations, with higher imports in the winter months and lower imports in the summer months. This trend is consistent with the seasonal demand for natural gas.")
+st.markdown("The quantity of natural gas imported into the US has fluctuated over the years, with notable peaks and troughs. The data shows a steady increase in the quantity of natural gas imported until 2008, reflecting the growing demand for natural gas in the US. After 2008 the US increased its domestic production of natural gas. The data also shows seasonal variations, with higher imports in the winter months and lower imports in the summer months. This trend is consistent with the seasonal demand for natural gas. We will now explore the production of Natural Gas in the US.")
 
 
 
-
+# Natural Gas Production
+st.markdown("")
 
 # Natural Gas Production over the years
 st.subheader("Natural Gas Production Data (1999 - 2024)")
@@ -314,83 +353,34 @@ st.pyplot(fig)
 st.markdown(f"The above graphs show a negative correlation of {correlation.iloc[0, 1]:.2f}. This indicates an inverse relationship between the quantity of natural gas produced and the quantity of natural gas imported. This means that as the quantity of natural gas imports decreases, the quantity of natural gas produced increases. This trend is consistent with the growing domestic production of natural gas in the US, which has led to a decrease in imports.")
 
 
-
-
-
-# Seasonal Distribution Between Temperature and Natural Gas Import Price
-merged_df4 = allmerged_df[["Date",  "Imports (MMcf)", "Price ($/Mcf)"]].copy()
-
-# Create Month Name and Number for ordering
-merged_df4["Month Name"] = merged_df4["Date"].dt.strftime('%B')
-merged_df4["Month Number"] = merged_df4["Date"].dt.month
-
-merged_df4 = merged_df4.sort_values("Month Number") # Sort for correct month order
-month_order = pd.date_range("2000-01-01", periods=12, freq="M").strftime("%B") # Define order explicitly
-fig, axes = plt.subplots(1, 1, figsize=(10, 4), sharex=False) # Create boxplots
-
-# Prices
-sns.boxplot(
-    data=merged_df4,
-    x="Month Name",
-    y="Price ($/Mcf)",
-    order=month_order,
-    ax=axes,
-    palette="BuPu",
-    width=0.5
+st.subheader("CO2 Emissions from Natural Gas Generation (1999 - 2024)")
+fig = px.line(
+    ng_carbon_dioxide_df,
+    x="Date",
+    y="Natural Gas CO2 Emissions (Million Metric Tons)",
+    color_discrete_sequence=["firebrick"]
 )
-axes.set_title("Seasonal Distribution of Natural Gas Import Prices")
-axes.set_xlabel("Month")
+st.plotly_chart(fig, use_container_width=True)
 
-plt.xticks(ticks=range(0, 12), labels=[
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-], fontsize=10)
-
-ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right') # Rotate x-axis labels for clarity
-ax.set_xlabel("-------------------------------------------------------------------------------------------------------------------------------------------- Month --------------------------------------------------------------------------------------------------------------------------------------------")
-ax.grid(axis='y', linestyle='--', alpha=0.5)
-
-plt.tight_layout(pad=2.5)
-st.pyplot(fig)
+st.markdown("The data shows a steady increase in CO2 emissions from natural gas generation. Compared to Solar energy, which is minimal only releasing CO2 during the manufacturing process, Natural Gas as an energy source has a significant impact on the environment. This highlights the importance of transitioning to renewable energy sources, such as solar energy, to reduce greenhouse gas emissions and mitigate climate change.") 
 
 
-
-# ----  KEY HIGHLIGHTS START ----
-
-# 1. Highest Monthly Import
-max_import_row = allmerged_df.loc[allmerged_df["Imports (MMcf)"].idxmax()]
-max_import_value = max_import_row["Imports (MMcf)"]
-max_import_date = max_import_row["Date"].strftime("%b %Y")
-
-# 2. Year with Highest Production
-yearly_production = allmerged_df.groupby("Date")["Production (MMcf)"].sum()
-highest_production_year = yearly_production.idxmax()
-highest_production_value = yearly_production.max()
-
-# 3. Month with Highest Cost
-max_cost_row = total_imports.loc[total_imports["Total Import Cost"].idxmax()]
-max_cost_value = max_cost_row["Total Import Cost"]
-max_cost_date = max_cost_row["Date"].strftime("%b %Y")
-
-# Display metrics
-st.subheader("📊 Key Highlights")
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric(label="📈 Highest Monthly Import", value=f"{max_import_value:,.0f} MMcf", delta=max_import_date)
-with col2:
-    st.metric(label="🏭 Highest Production Year", value=f"{highest_production_year.year}", delta=f"{highest_production_value:,.0f} units")
-with col3:
-    st.metric(label="💰 Highest Monthly Import Cost", value=f"${max_cost_value:,.0f}", delta=max_cost_date)
-
-# ----  KEY HIGHLIGHTS END ----
+# st.subheader("Natural Gas Generation (2001 - 2024)")
+# fig = px.line(
+#     allmerged_df[["Date","Natural Gas Generation (1000 MWh)"]],
+#     x="Date",
+#     y="Natural Gas Generation (1000 MWh)",
+#     color_discrete_sequence=["steelblue"]
+# )
+# st.plotly_chart(fig)
 
 
 
 
-# Solar PV Module Price Distribution
-solar_pv_module_df = pd.read_csv("data/solar-pv-prices.csv")
-solar_pv_module_df = solar_pv_module_df[['Year', 'Solar photovoltaic module price']]
-solar_pv_module_df = solar_pv_module_df.rename(columns={'Solar photovoltaic module price': 'Solar PV Module Price($)'})
+
+
+st.header("Solar Analysis")
+st.markdown("Factors such as the price of solar panels, maintenance cost, cost of installation and even the location also play a role in the feasibility of implementing solar power generation from an economic standpoint. We will explore these factors to understand the feasibility of implementing solar power generation in the US.")
 
 st.subheader("Solar Photovoltaic (PV) Module Price Distribution Over Years")
 fig = px.bar(
@@ -402,130 +392,17 @@ fig = px.bar(
 st.plotly_chart(fig, use_container_width=True)
 st.markdown("The price of Solar Photovoltaic (PV) panels have gradually decreased over the years. Prices hit an all time low of 0.31 USD per Watt in 2023. This trend is likely due to the increased production, popularity and availability of solar panels and energy. According to a blog post on Our World In Data, solar pv panel prices abide by 'Wrights Law'. Wrights Law states that the cost of technology falls consistently as the cumulative production of that technology increases.")
 
+st.subheader("Levelized Cost of Energy (LCOE) for Solar")
+st.markdown("One consolodated way to measure the cost of implimenting solar power generation is to use the Levelized Cost of Energy (LCOE). The LCOE is a measure of the average cost of generating electricity over the lifetime of a power plant. It takes into account the initial capital costs, operating and maintenance costs, and the expected energy production over the lifetime of the plant.")
 
 
-
-
-# CORRELATION BETWEEN SOLAR GENERATION AND GHI
-df = pd.read_csv("cleaned_merged_dataset.csv", parse_dates=["Date"])
-new_solar_df = df[["Date", "Solar Generation (1000 MWh)", "Clearsky GHI", "GHI"]].dropna().copy() # Filter relevant columns for solar analysis
-new_solar_df["Year"] = new_solar_df["Date"].dt.year # Convert to correct datetime format
-
-st.header("🔍 Correlation Analysis: Solar Generation vs. Irradiance")
-solar_corr_matrix = new_solar_df[["Solar Generation (1000 MWh)", "GHI"]].corr()
-
-fig_corr, ax = plt.subplots(figsize=(4, 2))
-sns.heatmap(solar_corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
-ax.set_title("Correlation Matrix: Solar Generation and GHI Metrics", fontsize=8)
-
-st.pyplot(fig_corr)
-st.markdown("""
-The correlation heatmap above indicates the strength of relationships between solar energy generation and irradiance metrics.  
-A coefficient of 0.11 indicates a weak positive correlation between solar energy generation and actual GHI. This implies that solar panels have a slightly better generation performance under high irradiance.
-""")
-
-
-
-
-# NATURAL GAS GENERATION VS SOLAR ENERGY GENERATION
-generation = allmerged_df[["Date", "Natural Gas Generation (1000 MWh)", "Solar Generation (1000 MWh)"]].copy()
-st.subheader('Natural Gas Generation vs Solar Generation (1000 MWh) (2001-2025)')
-st.line_chart(generation.set_index('Date'))
-st.markdown("Between the years of 2001 and 2025, natural gas significantly generated more energy than solar power. This is backed by the book 'Sustainable Energy In America 2025 Factbook' which states that Natural Gas is the the largest source of energy generation in the United States followed by renewable energy sources. Both natural gas and solar energy generations gradually increased over the years. This is likely due to population increases and increased implementation of electronics/technology. It is also seen that there is some seasonal correlation with energy generation as the amount of energy generated during the summer/warmer months is higher than the winter/colder months. ")
-
-
-
-
-
-# Correlation between CO2 Emissions and Natural Gas & Solar Energy Generations
-emissions_merged = allmerged_df.merge(carbon_dioxide_df, on="Date", how="inner")
-corr_data = emissions_merged[[
-    "CO2 Emissions (Million Metric Tons)",
-    "Natural Gas Generation (1000 MWh)", 
-    "Solar Generation (1000 MWh)"
-]].corr()
-st.subheader("Emission-Energy-Temperature Correlations")
-
-fig, ax = plt.subplots(figsize=(4,2))
-sns.heatmap(corr_data, annot=True, cmap="viridis", fmt=".2f", annot_kws={"size":10}, linewidths=.5, ax=ax)
-ax.set_title("Correlation Between Key Metrics", pad=15)
-plt.xticks(rotation=15, ha='right')
-
-st.pyplot(fig)
-st.markdown("Both Natural Gas Energy Generations and Solar Energy Generation have strong direct relationships with Carbon Dioxide Emissions (CO2). This means that as the amount of energy generated increases, the amount of carbon dioxide emissions also increases. Natural Gas has a stronger relationship with CO2 than Solar Energy as solar energy typically has less CO2 emissions and has more potential to reduce greenhouse gas emissions.")
-
-
-
-
-# Correlation between Temperature and Natural Gas Energy Generation
-corr_matrix = allmerged_df[["Natural Gas Generation (1000 MWh)", "Temperature (F)"]].corr()
-fig, ax = plt.subplots(figsize=(6, 3))
-sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
-ax.set_title("Correlation Matrix: Natural Gas Generation vs Temperature", fontsize=14)
-st.subheader("Natural Gas Energy Generation & Temperature Correlation")
-st.pyplot(fig)
-
-
-
-
-# Monthly Correlation between Temperature vs Natural Gas Energy Generation (2001–2025)
-monthly_df = allmerged_df[["Date", "Natural Gas Generation (1000 MWh)", "Temperature (F)"]].copy()
-monthly_df.dropna(inplace=True)
-monthly_df["Date"] = pd.to_datetime(monthly_df["Date"], errors="coerce") # Convert Date to datetime
-monthly_df = monthly_df[(monthly_df["Date"].dt.year >= 2001) & (monthly_df["Date"].dt.year <= 2025)] # filter year range
-monthly_df["Month"] = monthly_df["Date"].dt.month # Extract month number
-
-correlations = [] # Correlation for each month
-for month in range(1, 13):
-    subset = monthly_df[monthly_df["Month"] == month]
-    if not subset.empty:
-        corr = subset["Natural Gas Generation (1000 MWh)"].corr(subset["Temperature (F)"])
-        correlations.append((month, corr))
-
-corr_df = pd.DataFrame(correlations, columns=["Month", "Correlation"])
-month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-corr_df["Month"] = corr_df["Month"].apply(lambda x: month_names[x - 1])
-
-fig, ax = plt.subplots(figsize=(6, 3))
-bars = ax.bar(corr_df["Month"], corr_df["Correlation"], color="teal")
-ax.set_title("Monthly Correlation: Temperature vs Natural Gas Generation (2001–2025)", fontsize=14)
-ax.set_ylabel("Correlation Coefficient")
-ax.set_ylim(-1, 1)
-ax.grid(axis="y", linestyle="--", alpha=0.6)
-
-for bar in bars:
-    height = bar.get_height()
-    ax.annotate(f"{height:.2f}", xy=(bar.get_x() + bar.get_width() / 2, height),
-                xytext=(0, 5), textcoords="offset points", ha="center", fontsize=10)
-
-st.pyplot(fig)
-st.markdown("The correlation between temperature and natural gas generation is significant, with a correlation coefficient of {:.3f}. This indicates the existence of a direct relationship. This means that as temperature increases, the amount of energy generated using natural gas also increases. The data also shows a seasonal pattern, with higher generation in the summer months when temperature and demand for natural gas is highest and lower generation in the winter months when temperature and demand for natural gas is lowest. This is so as the US experiences alot of heatwaves and needs power to keep cool.".format(corr_matrix.iloc[0, 1]))
-
-
-
-
-# Cost to Generate Energy Consumed using Natural Gas
-cost_to_generate = allmerged_df[["Date", "Natural Gas Avg Cost ($/Mcf)", "Consumption (MMcf)"]].copy()
-cost_to_generate = cost_to_generate[cost_to_generate["Date"].dt.year > 2007]
-cost_to_generate["Cost to Generate Electricity ($/Mcf)"] = cost_to_generate["Natural Gas Avg Cost ($/Mcf)"] * (cost_to_generate["Consumption (MMcf)"] * 1000)
-st.subheader("Cost to Generate Electricity from Natural Gas(2008 - 2025)")
 fig = px.line(
-    cost_to_generate,
-    x="Date",
-    y="Cost to Generate Electricity ($/Mcf)",
-    #labels={"Total Import Cost": "Total Import Cost (USD)"}
+    lcoe_df,
+    x="Year",
+    y="Solar LCOE ($/KWh)",
+    labels={"Solar LCOE ($/KWh)": "Levelized Cost of Energy (LCOE) for Solar ($/KWh)"}
 )
 st.plotly_chart(fig)
-st.markdown("To calculate the total cost to generate the amount of electricty, we multiply the average cost to generate electricty using natural gas ($/Mcf) by the amount of natural gas consumed (MMcf). Due to these two factors being different units, the amount of natural gas consumed (MMcf) was converted to cubic feet (Mcf) by multiplying by 1000. Both factors were then multiplied to get the total cost to generate electricity. Between 2009 and 2020 the cost usually rises and falls around the same amount. However, in February 2021, the cost of generating electricity using natural gas experienced its largest spike. The cost spiked from around 2.8 Billion USD to around 13.9 Billion USD. According to Energy Information Administration (EIA), this was due to the extremely low temperatures caused by a winter storm. After the storm passed, costs returned to around 2.5 Billion USD next month. Antother large spike was experienced in August 2022, where costs rose to 12.8 Billion USD. This was likely due to the Russian invasion of Ukraine, U.S military conflict in Afghanistan, and flash flooding.")
 
-
-
-
-# Natural Gas vs Solar Energy generation cost comparison
-st.subheader('Energy Generation Prices using Natural Gas vs Using Solar')
-st.line_chart(comparison_df.set_index('Year'))
-st.markdown("The graph above compares the cost of generating the net amount of electricity generated by natural gas, using natural gas vs using solar. The cost of generating that amount of electricity by only using natural gas is significantly lower than the cost of only using solar. This is likely because implementing solar power in the form of Photovoltaic cells, requires a large amount of money for initial investment and infrastructure. Solar Panels also require more frequent maintenance, which can be expensive. This means that it is not practical and beneficial to completely replace natural gas energy generation with solar energy generation. It can be seen that over the years, the cost of generating energy using solar has gradually decreased. This is due to the increased production and avaliability of solar panels. If one desired to replace natural gas generation with solar, the optimal year to do so is 2022 as it is the year with the lowest cost of generating energy using solar and the difference between the cost of generating energy using natural gas and solar is the smallest.")
-
-
+st.markdown("The LCOE for solar energy has been steadily decreasing over the years, reflecting the declining costs of solar technology and increasing efficiency. The data shows that the LCOE for solar energy is now comparable to that of natural gas, making it a more competitive option for electricity generation. This trend is encouraging for the future of renewable energy, as it suggests that solar energy may soon become a more viable option for electricity generation. As technology continues to improve and costs decrease, we may see a shift towards greater adoption of solar energy in the coming years.")
 
