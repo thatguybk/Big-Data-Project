@@ -33,7 +33,7 @@ imports_df = import_df.dropna(subset=["Date", "Imports (MMcf)"])
 # Natural Gas Production Quantity
 url = "https://raw.githubusercontent.com/thatguybk/Big-Data-Project/main/WebDashboard/data/Natural_Gas_Plant_Processing.csv"
 quantityProduced_df = pd.read_csv(url, skiprows=6, sep=None, engine="python")
-quantityProduced_df = pd.read_csv("data/Natural_Gas_Plant_Processing.csv", skiprows=6, sep=None, engine="python")
+#quantityProduced_df = pd.read_csv("data/Natural_Gas_Plant_Processing.csv", skiprows=6, sep=None, engine="python")
 quantityProduced_df = quantityProduced_df.rename(columns={"Month": "Date", "U.S. Natural Gas Plant Liquids Production MMcf": "Production (MMcf)"})
 quantityProduced_df.columns = ["Date", "Production (MMcf)"]
 quantityProduced_df["Date"] = pd.to_datetime(quantityProduced_df["Date"], errors="coerce")
