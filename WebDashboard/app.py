@@ -31,6 +31,8 @@ imports_df = import_df.dropna(subset=["Date", "Imports (MMcf)"])
 
 
 # Natural Gas Production Quantity
+url = "https://raw.githubusercontent.com/thatguybk/Big-Data-Project/main/WebDashboard/data/Natural_Gas_Plant_Processing.csv"
+quantityProduced_df = pd.read_csv(url, skiprows=6, sep=None, engine="python")
 quantityProduced_df = pd.read_csv("data/Natural_Gas_Plant_Processing.csv", skiprows=6, sep=None, engine="python")
 quantityProduced_df = quantityProduced_df.rename(columns={"Month": "Date", "U.S. Natural Gas Plant Liquids Production MMcf": "Production (MMcf)"})
 quantityProduced_df.columns = ["Date", "Production (MMcf)"]
@@ -42,7 +44,7 @@ quantityProduced_df = quantityProduced_df.dropna(subset=["Date", "Production (MM
 
 
 # Natural Gas Consumption Quantity
-ngConsumption_df = pd.read_csv("data/Natural_Gas_Deleiveries_to_Electric_Power_Consumers.csv", skiprows=2)
+ngConsumption_df = pd.read_csv("https://raw.githubusercontent.com/thatguybk/Big-Data-Project/main/WebDashboard/data/Natural_Gas_Deleiveries_to_Electric_Power_Consumers.csv", skiprows=2)
 ngConsumption_df = ngConsumption_df.rename(columns={ "U.S. Natural Gas Deliveries to Electric Power Consumers (MMcf)": "Consumption (MMcf)"})
 ngConsumption_df["Date"] = pd.to_datetime(ngConsumption_df["Date"]).dt.to_period("M").dt.to_timestamp()
 ngConsumption_df = ngConsumption_df.dropna(subset=["Date", "Consumption (MMcf)"])
