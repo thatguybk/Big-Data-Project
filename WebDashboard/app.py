@@ -424,3 +424,28 @@ st.plotly_chart(fig)
 
 st.markdown("The LCOE for solar energy has been steadily decreasing over the years, reflecting the declining costs of solar technology and increasing efficiency. The data shows that the LCOE for solar energy is now comparable to that of natural gas, making it a more competitive option for electricity generation. This trend is encouraging for the future of renewable energy, as it suggests that solar energy may soon become a more viable option for electricity generation. As technology continues to improve and costs decrease, we may see a shift towards greater adoption of solar energy in the coming years.")
 
+
+st.subheader("Solar Energy Generation (2001 - 2024)")
+fig = px.line(
+    allmerged_df,
+    x="Date",
+    y="Solar Generation (1000 MWh)"
+)
+st.plotly_chart(fig)
+
+st.markdown("The data shows a steady increase in solar energy generation over the years, with peaks in the heated summer months. This trend is consistent with the growing adoption of solar energy in the US, as more households and businesses install solar panels to generate their own electricity. The data also shows seasonal variations, with higher generation in the summer months and lower generation in the winter months. This trend is consistent with the seasonal availability of sunlight, which is highest in the summer months and lowest in the winter months.") 
+
+
+st.subheader("Solar Energy Generation Cost (2010 - 2023)")
+fig = px.line(
+    merged_lcoe,
+    x="Year",
+    y="Solar Cost ($ USD)"
+)
+st.plotly_chart(fig)
+
+
+st.markdown("The cost of generating electricity from solar energy has been steadily decreasing over the years, reflecting the declining costs of solar technology. This trend is encouraging for the future of renewable energy, as it suggests that solar energy may soon become a more viable option for electricity generation. As technology continues to improve and costs decrease, we may see a shift towards greater adoption of solar energy in the near future. ")
+
+
+
