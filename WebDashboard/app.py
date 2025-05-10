@@ -13,8 +13,7 @@ st.set_page_config(page_title="Natural Gas Environmental Impact", layout="wide")
 #-------------------------------------------------------------LOAD AND CLEAN DATA----------------------------------------------------------------
 
 # Price of Natural Gas Imports
-url = "https://raw.githubusercontent.com/thatguybk/Big-Data-Project/main/WebDashboard/data/Natural_Gas_Import_Price.csv"
-price_df = pd.read_csv(url, skiprows=2, parse_dates=["Date"])
+price_df = pd.read_csv("data/Natural_Gas_Import_Price.csv", skiprows=2, parse_dates=["Date"])
 price_df = price_df.rename(columns={"Price of U.S. Natural Gas Imports (Dollars per Thousand Cubic Feet)": "Price ($/Mcf)"})
 price_df["Date"] = pd.to_datetime(price_df["Date"])
 price_df["Date"] = pd.to_datetime(price_df["Date"]).dt.to_period("M").dt.to_timestamp()
